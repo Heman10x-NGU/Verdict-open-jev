@@ -1,0 +1,8 @@
+{
+  "model_id": "openjev-modernbert-149m",
+  "temperature": 3.224806070327759,
+  "log_temperature": 1.1708728075027466,
+  "scope": "restricted_5_candidate_selection",
+  "artifact_hash": "e6a13d7ebffc39050d5e8687a4192b02fc922262d4e8bb43586ab32605ad2ea8",
+  "format_version": "rlcd-calibrator-v1"
+}
