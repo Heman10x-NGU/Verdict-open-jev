@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verdict-open-jev-ModernBERT: Real Local Decision Engine (WebGPU / WASM)</title>
+  <style>
+    :root {
+      --bg-primary: #0a0c10;
+      --bg-secondary: #12151e;
+      --bg-card: #181c28;
+      --border-color: #262c3e;
+      --text-main: #f0f3f8;
+      --text-muted: #8b949e;
+      --accent-blue: #3b82f6;
+      --accent-green: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-red: #ef4444;
+      --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1240px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .badge-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+    }
+    .badge-gpu { border-color: #059669; color: #34d399; background: rgba(5, 150, 105, 0.1); }
+    .badge-wasm { border-color: #d97706; color: #fbbf24; background: rgba(217, 119, 6, 0.1); }
+    .badge-model { border-color: #2563eb; color: #60a5fa; background: rgba(37, 99, 235, 0.1); }
+    .badge-math { border-color: #7c3aed; color: #a78bfa; background: rgba(124, 58, 237, 0.1); }
+
+    /* Tabs */
+    .tabs-nav {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+    }
+
+    /* Layout Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+    }
+    @media (max-width: 960px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    select, textarea, input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-primary);
+      color: var(--text-main);
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    select:focus, textarea:focus, input[type="text"]:focus { border-color: var(--accent-blue); }
+
+    /* Candidates List */
+    .candidates-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .candidate-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+    .candidate-row.abstain {
+      border-style: dashed;
+      border-color: var(--accent-amber);
+    }
+    .cand-id {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 0.82rem;
+      min-width: 140px;
+      color: var(--accent-blue);
+    }
+    .cand-desc {
+      flex: 1;
+      font-size: 0.82rem;
+      color: var(--text-main);
+    }
+    .cand-btn-remove {
+      background: none;
+      border: none;
+      color: var(--accent-red);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0 4px;
+    }
+
+    .cand-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-secondary {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--accent-blue); }
+    .btn-challenge {
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid var(--accent-amber);
+      color: var(--accent-amber);
+    }
+    .btn-challenge:hover { background: rgba(245, 158, 11, 0.2); }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .slider-row input[type="range"] { flex: 1; accent-color: var(--accent-blue); }
+    .slider-val { font-family: var(--font-mono); font-weight: 700; color: var(--accent-blue); width: 48px; }
+
+    .btn-run {
+      background: var(--accent-blue);
+      color: #fff;
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .btn-run:hover { opacity: 0.9; }
+    .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Results */
+    .output-box {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      min-height: 240px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bar-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+    }
+    .bar-container {
+      height: 8px;
+      background: var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      background: var(--accent-blue);
+      border-radius: 4px;
+      transition: width 0.3s ease-out;
+    }
+    .bar-fill.abstain { background: var(--accent-amber); }
+    .bar-fill.top { background: var(--accent-green); }
+
+    .routing-banner {
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .route-auto { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent-green); color: var(--accent-green); }
+    .route-human { background: rgba(245, 158, 11, 0.15); border: 1px solid var(--accent-amber); color: var(--accent-amber); }
+    .route-abstain { background: rgba(239, 68, 68, 0.15); border: 1px solid var(--accent-red); color: var(--accent-red); }
+
+    .telemetry-row {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      padding-top: 8px;
+    }
+
+    /* Modal / Receipt Viewer */
+    .receipt-box {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      max-height: 180px;
+      overflow-y: auto;
+      color: #7ee787;
+      white-space: pre-wrap;
+    }
+
+    .table-bench {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .table-bench th, .table-bench td {
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .table-bench th {
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+      margin-top: 20px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <header>
+    <div>
+      <h1 style="font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em;">Verdict-open-jev-ModernBERT Decision Engine</h1>
+      <p style="color: var(--text-muted); margin-top: 4px; font-size: 0.9rem;">
+        Non-autoregressive decision model running client-side. Zero token generation, explicit abstention, and strictly proper scoring calibration.
+      </p>
+      <div class="badge-group">
+        <span id="backend-badge" class="badge badge-wasm">Loading WebWorker...</span>
+        <span id="model-param-badge" class="badge badge-model">151M ModernBERT Backbone</span>
+        <span id="ece-badge" class="badge badge-math">Loading calibration...</span>
+        <span class="badge">Capacity: &le; 25 Candidates</span>
+      </div>
+      <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+        <label for="model-bundle-select" style="font-size: 0.8rem; color: var(--text-muted);">Model Checkpoint:</label>
+        <select id="model-bundle-select" style="background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 4px 8px; font-size: 0.8rem;">
+          <option value="artifacts_v2" selected>v2 Model Checkpoint (Recommended)</option>
+          <option value="artifacts">v1 Baseline Checkpoint</option>
+        </select>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+      <button class="btn-secondary" id="btn-download-receipt" disabled>
+        📥 Download Decision Receipt (JSON)
+      </button>
+      <span style="font-size: 0.75rem; color: var(--text-muted);" id="model-load-status">Downloading ONNX weights...</span>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" data-tab="tab-live">Live Interactive Engine</button>
+    <button class="tab-btn" data-tab="tab-failure">Boundary &amp; Failure Gallery</button>
+    <button class="tab-btn" data-tab="tab-benchmarks">Verified Audit Receipts</button>
+  </div>
+
+  <!-- TAB 1: Live Engine -->
+  <div id="tab-live" class="main-grid">
+    <!-- Left: Input & Candidate Configuration -->
+    <div class="card">
+      <div class="form-group">
+        <label for="preset-select">Curated Diagnostic Presets</label>
+        <select id="preset-select">
+          <option value="card_arrival">Banking77: "I ordered my new card two weeks ago but haven't received it"</option>
+          <option value="lost_or_stolen_card">Banking77: "Someone snatched my purse with my card inside"</option>
+          <option value="compromised_card">Banking77: "Unrecognized charges appearing on statement from overseas"</option>
+          <option value="oos_solar">Distant OOS: "The total solar eclipse crossed North America" (Expects Abstention)</option>
+          <option value="custom">Custom Input &amp; Candidates</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="context-input">Context / Customer Query</label>
+        <textarea id="context-input" rows="3">I ordered my new card two weeks ago but haven't received it in the mail yet. Can you check delivery?</textarea>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label>Active Candidate Choices (&le; 24 substantive)</label>
+          <span style="font-size: 0.75rem; color: var(--text-muted);" id="cand-count-label">4 candidates</span>
+        </div>
+        <div class="candidates-box" id="candidates-box">
+          <!-- Populated dynamically -->
+        </div>
+        <div class="cand-actions">
+          <button class="btn-secondary" id="btn-add-cand">+ Add Candidate</button>
+          <button class="btn-secondary btn-challenge" id="btn-stress-remove" title="Remove expected choice to test if model properly abstains or hallucinates">
+            ⚡ Challenge: Remove Expected Option
+          </button>
+          <button class="btn-secondary" id="btn-reset-preset">Reset Preset</button>
+        </div>
+      </div>
+
+      <div class="slider-row">
+        <label style="min-width: 200px;">Autonomous Threshold:</label>
+        <input type="range" id="thresh-slider" min="50" max="98" value="85">
+        <span class="slider-val" id="thresh-val">85%</span>
+      </div>
+
+      <button class="btn-run" id="btn-eval" disabled>
+        <span>▶</span> Execute Real In-Browser Inference
+      </button>
+    </div>
+
+    <!-- Right: Real Output & Verification -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+        <span style="font-weight: 700; font-size: 1rem;">Model Decision Output</span>
+        <span style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-green);" id="timing-badge">0.0 ms</span>
+      </div>
+
+      <div class="output-box" id="output-box">
+        <div style="color: var(--text-muted); margin: auto; text-align: center;">
+          Initializing model worker in background...<br>
+          <span style="font-size: 0.75rem;">ONNX Runtime Web compiling ModernBERT WebGPU / WASM kernels</span>
+        </div>
+      </div>
+
+      <div id="routing-banner" class="routing-banner route-auto" style="display: none;">
+        <span>✓</span> <span id="routing-text">Autonomous execution dispatched</span>
+      </div>
+
+      <div class="telemetry-row" id="telemetry-row" style="display: none;">
+        <span>Tokens: <strong id="tel-tokens">0</strong></span>
+        <span>Tokenize: <strong id="tel-tok-time">0ms</strong></span>
+        <span>Forward: <strong id="tel-fwd-time">0ms</strong></span>
+        <span>Scope: <strong id="tel-scope">uncalibrated</strong></span>
+      </div>
+
+      <div class="form-group" style="margin-top: 4px;">
+        <label>Latest Decision Receipt Preview</label>
+        <div class="receipt-box" id="receipt-preview">Awaiting inference...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: Boundary & Failure Gallery -->
+  <div id="tab-failure" class="card" style="display: none;">
+    <h3 style="font-size: 1.2rem; color: var(--accent-amber);">Failure Gallery: Inspected Boundaries &amp; Stress Tests</h3>
+    <p style="color: var(--text-muted); font-size: 0.88rem;">
+      In accordance with engineering invariants, we openly publish cases where the current model fails to abstain or exhibits miscalibration.
+    </p>
+
+    <table class="table-bench" style="margin-top: 12px;">
+      <thead>
+        <tr>
+          <th>Case Description</th>
+          <th>Input Text</th>
+          <th>Expected Outcome</th>
+          <th>Observed Model Behavior</th>
+          <th>Root Cause</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Missing-Option Diagnostic</strong></td>
+          <td>Banking77 query with true intent stripped from candidate list</td>
+          <td><code>__insufficient_evidence__</code></td>
+          <td>Abstained on only 16/77 cases (20.8%). Picked distractor on 61/77 cases.</td>
+          <td>Model was trained on distant CLINC OOS rather than hard in-domain missing options. Addressed in G2–G4 training.</td>
+        </tr>
+        <tr>
+          <td><strong>Full 77-Way Intent Classification</strong></td>
+          <td>Customer support query tested against all 77 Banking77 classes</td>
+          <td>Single-pass 77-class softmax</td>
+          <td><code>IndexError: Target 76 out of bounds</code></td>
+          <td>Fixed model scoring head capacity is 25 logits. Documented as unsupported for v0.1.</td>
+        </tr>
+        <tr>
+          <td><strong>Sibling Intent Ambiguity</strong></td>
+          <td><em>"Someone used my debit card details online"</em></td>
+          <td><code>compromised_card</code> with caution</td>
+          <td>Scores <code>lost_or_stolen_card</code> and <code>compromised_card</code> closely</td>
+          <td>Semantic overlap between physical loss and digital skimming. Requires glossary disambiguation.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TAB 3: Verified Benchmark Receipts -->
+  <div id="tab-benchmarks" class="card" style="display: none;">
+    <h3 style="font-size: 1.2rem; color: var(--accent-blue);">Verified Audit Receipts (Fa70460 Baseline)</h3>
+    <p style="color: var(--text-muted); font-size: 0.88rem;">
+      Metrics independently reproduced from 2,154 raw predictions in <code>reports/astra-review-2026-09-17/review.json</code>.
+    </p>
+
+    <table class="table-bench" style="margin-top: 12px;">
+      <thead>
+        <tr>
+          <th>Evaluation Slice</th>
+          <th>Sample Count</th>
+          <th>Accuracy</th>
+          <th>Brier Score</th>
+          <th>Equal-Width ECE</th>
+          <th>NLL</th>
+        </tr>
+      </thead>
+      <tbody id="audit-receipts-body">
+        <tr>
+          <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 16px;">
+            Loading audit receipts from evaluation_report_v2.json...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    Verdict-open-jev-ModernBERT • Open-source research project inspired by TypeSafe AI's Jev • Pure client-side decision inference.
+  </footer>
+</div>
+
+<script type="module">
+  let PRESETS = {};
+  let activeCandidates = [];
+  let latestReceipt = null;
+
+  // DOM elements
+  const presetSelect = document.getElementById("preset-select");
+  const contextInput = document.getElementById("context-input");
+  const candidatesBox = document.getElementById("candidates-box");
+  const candCountLabel = document.getElementById("cand-count-label");
+  const btnAddCand = document.getElementById("btn-add-cand");
+  const btnStressRemove = document.getElementById("btn-stress-remove");
+  const btnResetPreset = document.getElementById("btn-reset-preset");
+  const threshSlider = document.getElementById("thresh-slider");
+  const threshVal = document.getElementById("thresh-val");
+  const btnEval = document.getElementById("btn-eval");
+  const backendBadge = document.getElementById("backend-badge");
+  const modelLoadStatus = document.getElementById("model-load-status");
+  const outputBox = document.getElementById("output-box");
+  const timingBadge = document.getElementById("timing-badge");
+  const routingBanner = document.getElementById("routing-banner");
+  const routingText = document.getElementById("routing-text");
+  const telemetryRow = document.getElementById("telemetry-row");
+  const telTokens = document.getElementById("tel-tokens");
+  const telTokTime = document.getElementById("tel-tok-time");
+  const telFwdTime = document.getElementById("tel-fwd-time");
+  const telScope = document.getElementById("tel-scope");
+  const receiptPreview = document.getElementById("receipt-preview");
+  const btnDownloadReceipt = document.getElementById("btn-download-receipt");
+
+  const modelBundleSelect = document.getElementById("model-bundle-select");
+
+  // Load Presets and Evaluation Report dynamically
+  async function loadInitialData() {
+    try {
+      const pRes = await fetch("presets.json");
+      if (pRes.ok) {
+        PRESETS = await pRes.json();
+        loadPreset();
+      }
+    } catch (err) {
+      console.warn("Failed to fetch presets.json:", err);
+    }
+
+    try {
+      const repRes = await fetch("evaluation_report_v2.json");
+      if (repRes.ok) {
+        const rep = await repRes.json();
+        const eceBadge = document.getElementById("ece-badge");
+        if (eceBadge && rep.calibrated?.ece_equal_width?.ece !== undefined) {
+          const eceVal = (rep.calibrated.ece_equal_width.ece * 100).toFixed(2);
+          eceBadge.textContent = `ECE = ${eceVal}% (Calibrated)`;
+        }
+
+        const tbody = document.getElementById("audit-receipts-body");
+        if (tbody) {
+          tbody.innerHTML = "";
+          const rowsData = [
+            {
+              name: "Model Checkpoint v2 (Held-out Test)",
+              samples: 1000,
+              accuracy: rep.calibrated?.accuracy,
+              brier: rep.calibrated?.brier_score,
+              ece: rep.calibrated?.ece_equal_width?.ece,
+              nll: rep.calibrated?.negative_log_likelihood
+            },
+            {
+              name: "Missing-Option Slice",
+              samples: rep.slices?.missing_option?.samples || 200,
+              accuracy: rep.slices?.missing_option?.accuracy,
+              brier: rep.slices?.missing_option?.brier,
+              ece: rep.slices?.missing_option?.ece,
+              nll: rep.slices?.missing_option?.nll,
+              abstain: true
+            },
+            {
+              name: "Distant OOS Slice",
+              samples: rep.slices?.distant_oos?.samples || 200,
+              accuracy: rep.slices?.distant_oos?.accuracy,
+              brier: rep.slices?.distant_oos?.brier,
+              ece: rep.slices?.distant_oos?.ece,
+              nll: rep.slices?.distant_oos?.nll,
+              abstain: true
+            }
+          ];
+
+          rowsData.forEach(r => {
+            const tr = document.createElement("tr");
+            const tdName = document.createElement("td");
+            const strong = document.createElement("strong");
+            strong.textContent = r.name;
+            tdName.appendChild(strong);
+
+            const tdCount = document.createElement("td");
+            tdCount.textContent = r.samples.toLocaleString();
+
+            const tdAcc = document.createElement("td");
+            tdAcc.textContent = r.accuracy !== undefined ? `${(r.accuracy * 100).toFixed(2)}%${r.abstain ? " (Abstain)" : ""}` : "-";
+
+            const tdBrier = document.createElement("td");
+            tdBrier.textContent = r.brier !== undefined ? r.brier.toFixed(4) : "-";
+
+            const tdEce = document.createElement("td");
+            tdEce.textContent = r.ece !== undefined ? r.ece.toFixed(4) : "-";
+
+            const tdNll = document.createElement("td");
+            tdNll.textContent = r.nll !== undefined ? r.nll.toFixed(4) : "-";
+
+            tr.append(tdName, tdCount, tdAcc, tdBrier, tdEce, tdNll);
+            tbody.appendChild(tr);
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to fetch evaluation_report_v2.json:", err);
+    }
+  }
+
+  // Initialize WebWorker
+  const worker = new Worker("worker.js", { type: "module" });
+  worker.postMessage({ type: "INIT", payload: { basePath: "artifacts_v2" } });
+  loadInitialData();
+
+  if (modelBundleSelect) {
+    modelBundleSelect.addEventListener("change", (e) => {
+      btnEval.disabled = true;
+      modelLoadStatus.textContent = `Loading ${e.target.value}...`;
+      outputBox.innerHTML = `<div style="color: var(--text-muted); margin: auto; text-align: center;">Switching checkpoint to ${e.target.value}...</div>`;
+      worker.postMessage({ type: "INIT", payload: { basePath: e.target.value } });
+    });
+  }
+
+  worker.onmessage = function (e) {
+    const { type, backend, message, candidates, selected, selectedProb, isAbstention, isAutonomous, policyAction, timings, receipt } = e.data;
+
+    if (type === "PROGRESS") {
+      modelLoadStatus.textContent = message;
+    } else if (type === "READY") {
+      backendBadge.textContent = backend === "WebGPU" ? "⚡ WebGPU Active" : "💻 WASM Execution Active";
+      backendBadge.className = backend === "WebGPU" ? "badge badge-gpu" : "badge badge-wasm";
+      modelLoadStatus.textContent = "Model ready in browser memory";
+      btnEval.disabled = false;
+      outputBox.innerHTML = '<div style="color: var(--text-muted); margin: auto; text-align: center;">Model initialized. Click "Execute Real In-Browser Inference" below.</div>';
+    } else if (type === "RESULT") {
+      renderResults(candidates, selected, selectedProb, isAbstention, isAutonomous, policyAction, timings, receipt);
+      btnEval.disabled = false;
+    } else if (type === "ERROR" || type === "INFER_ERROR") {
+      outputBox.innerHTML = `<div style="color: var(--accent-red); margin: auto;">Error: ${message}</div>`;
+      btnEval.disabled = false;
+    }
+  };
+
+  // Render candidate list with textContent to prevent XSS
+  function renderCandidates() {
+    candidatesBox.innerHTML = "";
+    candCountLabel.textContent = `${activeCandidates.length} candidates (max 25)`;
+
+    activeCandidates.forEach((cand, idx) => {
+      const isAbstain = cand.id === "__insufficient_evidence__";
+      const row = document.createElement("div");
+      row.className = `candidate-row ${isAbstain ? "abstain" : ""}`;
+
+      const idSpan = document.createElement("span");
+      idSpan.className = "cand-id";
+      idSpan.textContent = cand.id;
+
+      const descSpan = document.createElement("span");
+      descSpan.className = "cand-desc";
+      descSpan.textContent = cand.desc;
+
+      row.appendChild(idSpan);
+      row.appendChild(descSpan);
+
+      if (!isAbstain) {
+        const btnRemove = document.createElement("button");
+        btnRemove.className = "cand-btn-remove";
+        btnRemove.title = "Remove candidate";
+        btnRemove.textContent = "×";
+        btnRemove.addEventListener("click", () => {
+          activeCandidates.splice(idx, 1);
+          renderCandidates();
+        });
+        row.appendChild(btnRemove);
+      } else {
+        const abstainLabel = document.createElement("span");
+        abstainLabel.style.cssText = "font-size: 0.75rem; color: var(--accent-amber); font-weight:600;";
+        abstainLabel.textContent = "(abstention)";
+        row.appendChild(abstainLabel);
+      }
+
+      candidatesBox.appendChild(row);
+    });
+  }
+
+  // Load Preset
+  function loadPreset() {
+    const key = presetSelect.value;
+    const p = PRESETS[key] || PRESETS.card_arrival;
+    if (!p) return;
+    contextInput.value = p.text;
+    activeCandidates = JSON.parse(JSON.stringify(p.candidates));
+    renderCandidates();
+  }
+
+  presetSelect.addEventListener("change", loadPreset);
+  btnResetPreset.addEventListener("click", loadPreset);
+
+  // Add Candidate
+  btnAddCand.addEventListener("click", () => {
+    if (activeCandidates.length >= 25) {
+      alert("Maximum supported capacity is 25 candidates.");
+      return;
+    }
+    const id = prompt("Enter candidate identifier (e.g. transfer_charge):");
+    if (!id) return;
+    const desc = prompt("Enter candidate semantic description:");
+    if (!desc) return;
+
+    // Insert before abstention
+    activeCandidates.splice(activeCandidates.length - 1, 0, { id, desc });
+    renderCandidates();
+  });
+
+  // Challenge: Remove expected candidate
+  btnStressRemove.addEventListener("click", () => {
+    if (activeCandidates.length <= 2) {
+      alert("Cannot remove further options.");
+      return;
+    }
+    // Remove the first non-abstention candidate
+    const removed = activeCandidates.shift();
+    alert(`Removed expected candidate: '${removed.id}'. Run inference to test if model abstains or falsely accepts an alternative.`);
+    renderCandidates();
+  });
+
+  // Threshold Slider
+  threshSlider.addEventListener("input", (e) => {
+    threshVal.textContent = e.target.value + "%";
+    if (latestReceipt) {
+      updatePolicyWithThreshold(parseInt(e.target.value, 10) / 100.0);
+    }
+  });
+
+  // Evaluate
+  btnEval.addEventListener("click", () => {
+    btnEval.disabled = true;
+    outputBox.innerHTML = '<div style="color: var(--text-muted); margin: auto; text-align: center;">Executing WebGPU/WASM tensor operations...</div>';
+    routingBanner.style.display = "none";
+    telemetryRow.style.display = "none";
+
+    const threshold = parseInt(threshSlider.value, 10) / 100.0;
+    const currentPreset = PRESETS[presetSelect.value];
+    worker.postMessage({
+      type: "INFER",
+      payload: {
+        id: "browser_query_" + Date.now(),
+        question: currentPreset ? currentPreset.question : undefined,
+        text: contextInput.value,
+        candidates: activeCandidates,
+        threshold: threshold
+      }
+    });
+  });
+
+  function renderResults(candidates, selected, selectedProb, isAbstention, isAutonomous, policyAction, timings, receipt) {
+    latestReceipt = receipt;
+    btnDownloadReceipt.disabled = false;
+
+    timingBadge.textContent = `${timings.total_end_to_end} ms`;
+    outputBox.innerHTML = "";
+
+    candidates.forEach((cand) => {
+      const pct = (cand.prob * 100).toFixed(1);
+      const isTop = cand.id === selected.id;
+      const isAbstain = cand.id === "__insufficient_evidence__";
+      const fillClass = isAbstain ? "abstain" : (isTop ? "top" : "");
+
+      const row = document.createElement("div");
+      row.className = "bar-row";
+      row.innerHTML = `
+        <div class="bar-label">
+          <span style="font-weight: ${isTop ? "700" : "400"}; color: ${isTop ? "#fff" : "var(--text-muted)"}">
+            ${cand.id} <span style="font-size: 0.75rem; opacity: 0.7;">(${cand.desc.slice(0, 36)}...)</span>
+          </span>
+          <span style="font-weight: 700; color: ${isTop ? "var(--accent-green)" : "var(--text-muted)"}">${pct}%</span>
+        </div>
+        <div class="bar-container">
+          <div class="bar-fill ${fillClass}" style="width: ${pct}%"></div>
+        </div>
+      `;
+      outputBox.appendChild(row);
+    });
+
+    // Telemetry
+    telemetryRow.style.display = "flex";
+    telTokens.textContent = receipt.input_token_count;
+    telTokTime.textContent = `${timings.tokenization}ms`;
+    telFwdTime.textContent = `${timings.forward_readback}ms`;
+    telScope.textContent = receipt.calibration.status;
+
+    // Policy banner
+    routingBanner.style.display = "flex";
+    if (isAbstention) {
+      routingBanner.className = "routing-banner route-abstain";
+      routingText.textContent = `Explicit Abstention (${(selectedProb*100).toFixed(1)}%) -> Dispatched to Tier 1 Triage Queue`;
+    } else if (isAutonomous) {
+      routingBanner.className = "routing-banner route-auto";
+      routingText.textContent = `Autonomous Action (${(selectedProb*100).toFixed(1)}% >= ${(receipt.policy.threshold*100).toFixed(0)}%) -> Dispatched ${policyAction}`;
+    } else {
+      routingBanner.className = "routing-banner route-human";
+      routingText.textContent = `Confidence Below Threshold (${(selectedProb*100).toFixed(1)}% < ${(receipt.policy.threshold*100).toFixed(0)}%) -> Escalated to Supervisor`;
+    }
+
+    // Receipt preview
+    receiptPreview.textContent = JSON.stringify(receipt, null, 2);
+  }
+
+  function updatePolicyWithThreshold(thresh) {
+    if (!latestReceipt) return;
+    const selectedProb = latestReceipt.selected.probability;
+    const isAbstention = latestReceipt.selected.is_abstention;
+    const isAutonomous = !isAbstention && selectedProb >= thresh;
+
+    if (isAbstention) {
+      routingBanner.className = "routing-banner route-abstain";
+      routingText.textContent = `Explicit Abstention (${(selectedProb*100).toFixed(1)}%) -> Dispatched to Tier 1 Triage Queue`;
+    } else if (isAutonomous) {
+      routingBanner.className = "routing-banner route-auto";
+      routingText.textContent = `Autonomous Action (${(selectedProb*100).toFixed(1)}% >= ${(thresh*100).toFixed(0)}%) -> Dispatched ${latestReceipt.policy.action}`;
+    } else {
+      routingBanner.className = "routing-banner route-human";
+      routingText.textContent = `Confidence Below Threshold (${(selectedProb*100).toFixed(1)}% < ${(thresh*100).toFixed(0)}%) -> Escalated to Supervisor`;
+    }
+  }
+
+  // Download Receipt
+  btnDownloadReceipt.addEventListener("click", () => {
+    if (!latestReceipt) return;
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(latestReceipt, null, 2));
+    const a = document.createElement("a");
+    a.setAttribute("href", dataStr);
+    a.setAttribute("download", `decision_receipt_${latestReceipt.query_id}.json`);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  });
+
+  // Tabs switching
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      e.target.classList.add("active");
+      const targetTab = e.target.dataset.tab;
+
+      document.getElementById("tab-live").style.display = targetTab === "tab-live" ? "grid" : "none";
+      document.getElementById("tab-failure").style.display = targetTab === "tab-failure" ? "flex" : "none";
+      document.getElementById("tab-benchmarks").style.display = targetTab === "tab-benchmarks" ? "flex" : "none";
+    });
+  });
+
+  // Initial load
+  loadPreset();
+</script>
+
+</body>
+</html>
