@@ -347,3 +347,36 @@ OpenJev builds on open research and open-source models:
 - Banking77: Maintained by PolyAI for customer service intent evaluation.
 - CLINC150: Maintained by CLINC for out-of-scope evaluation.
 - Inspired by TypeSafe AI\'s Jev decision engine architecture.
+
+## Gen Suite Cookbook Evaluation Matrix
+
+Empirical evaluation of OpenJev across 12 structured decision tasks, comparing the zero-shot base checkpoint (`knowledgator/gliclass-modern-base-v2.0`) against the Banking77 fine-tuned checkpoint (`artifacts/v2/model.safetensors`) across three label-framing arms (`neutral`, `verbose`, `banking_framed`).
+
+### Promoted Top Cookbooks
+
+<!-- BEGIN GENERATED: cookbook_sweep_top3 -->
+| Rank | Task ID | Cookbook Recipe | Evaluated Use Case | Optimal Checkpoint | Framing Arm | Accuracy | Adaptive ECE | Over-Abstention |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 1 | `T08` | [Smart Home Command Interpretation](RLCD%20Cookbook/demos_smart_home.md) | Interpret natural language smart home utterances into 7 discrete device control actions plus abstention. | `finetuned` | `verbose` | 96.9% | 3.7% | 0.0% |
+| 2 | `T09` | [Function and Tool Routing](RLCD%20Cookbook/function_calling.md) | Map natural language trading and account commands to 20 typed API functions plus abstention. | `finetuned` | `banking_framed` | 93.3% | 3.5% | 0.0% |
+| 3 | `T12` | [RAG Prompt-Injection Screening](RLCD%20Cookbook/classifying_rag_passages.md) | Screen retrieved knowledge chunks to detect adversarial prompt injection before answering model ingestion. | `finetuned` | `banking_framed` | 90.4% | 39.0% | 94.0% |
+<!-- END GENERATED: cookbook_sweep_top3 -->
+
+### Full 12-Task Cross-Domain Evaluation Matrix
+
+<!-- BEGIN GENERATED: cookbook_sweep_matrix -->
+| Task ID | Task Name | Cardinality ($K$) | Winning Checkpoint | Winning Arm | Accuracy | Adaptive ECE | Over-Abstention | Proper Brier | Gate Status |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `T01` | Phishing vs Legitimate Email | $K=3$ | `finetuned` | `banking_framed` | 61.6% | 30.5% | 96.9% | 0.5718 | Failed Gate |
+| `T02` | Jailbreak vs Benign Prompt | $K=3$ | `finetuned` | `banking_framed` | 56.9% | 40.3% | 99.5% | 0.8080 | Failed Gate |
+| `T03` | Hazard Severity Routing | $K=5$ | `base` | `neutral` | 70.4% | 43.8% | 23.9% | 0.6136 | Failed Gate |
+| `T04` | Shopify Product Taxonomy (Flat Leaf) | $K=25$ | `finetuned` | `neutral` | 45.7% | 16.9% | 0.0% | 0.6916 | Failed Gate |
+| `T05` | Shopify Taxonomy (Hierarchical Beam) | $K=7$ | `base` | `neutral` | 60.4% | 16.6% | 0.0% | 0.4571 | Failed Gate |
+| `T06` | Banking77 In-Domain Control | $K=5$ | `finetuned` | `neutral` | 88.2% | 6.2% | 26.2% | 0.1717 | Failed Gate |
+| `T07` | CLINC150 Intent Domain Routing | $K=11$ | `finetuned` | `verbose` | 73.1% | 11.9% | 2.4% | 0.3438 | Failed Gate |
+| `T08` | Smart Home Command Interpretation | $K=8$ | `finetuned` | `verbose` | 96.9% | 3.7% | 0.0% | 0.0490 | PASSED (Promoted) |
+| `T09` | Function and Tool Routing | $K=21$ | `finetuned` | `banking_framed` | 93.3% | 3.5% | 0.0% | 0.1001 | PASSED (Promoted) |
+| `T10` | Agent Skill Selection | $K=21$ | `finetuned` | `verbose` | 88.6% | 10.7% | 0.0% | 0.1678 | Failed Gate |
+| `T11` | Passage Relevance Re-ranking | $K=10$ | `finetuned` | `verbose` | 25.7% | 20.9% | 0.0% | 0.9115 | Failed Gate |
+| `T12` | RAG Prompt-Injection Screening | $K=3$ | `finetuned` | `banking_framed` | 90.4% | 39.0% | 94.0% | 0.3909 | Failed Gate |
+<!-- END GENERATED: cookbook_sweep_matrix -->

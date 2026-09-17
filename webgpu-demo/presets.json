@@ -95,6 +95,122 @@
       }
     ]
   },
+  "smarthome_lights": {
+    "key": "smarthome_lights",
+    "name": "Cookbook T08: Smart Home (Lights)",
+    "question": "Which home automation action does the user want executed?",
+    "text": "Turn off all the lights in the house before going to sleep and dim the hallway lamps.",
+    "candidates": [
+      {
+        "id": "lights_control",
+        "desc": "Turn on, turn off, or dim household lights"
+      },
+      {
+        "id": "climate_control",
+        "desc": "Adjust thermostat temperature, AC, or heating"
+      },
+      {
+        "id": "security_locks",
+        "desc": "Lock or unlock doors and arm security system"
+      },
+      {
+        "id": "media_playback",
+        "desc": "Play music, pause podcast, or adjust speaker volume"
+      },
+      {
+        "id": "vacuum_cleaning",
+        "desc": "Start robot vacuum cleaner in specific rooms"
+      },
+      {
+        "id": "alarms_timers",
+        "desc": "Set alarm, wake-up timer, or reminder countdown"
+      },
+      {
+        "id": "camera_feed",
+        "desc": "Show security camera video feed or doorbell camera"
+      },
+      {
+        "id": "__insufficient_evidence__",
+        "desc": "insufficient evidence"
+      }
+    ]
+  },
+  "smarthome_climate": {
+    "key": "smarthome_climate",
+    "name": "Cookbook T08: Smart Home (Climate)",
+    "question": "Which home automation action does the user want executed?",
+    "text": "Set the thermostat downstairs to 68 degrees and turn on AC cooling in the nursery.",
+    "candidates": [
+      {
+        "id": "lights_control",
+        "desc": "Turn on, turn off, or dim household lights"
+      },
+      {
+        "id": "climate_control",
+        "desc": "Adjust thermostat temperature, AC, or heating"
+      },
+      {
+        "id": "security_locks",
+        "desc": "Lock or unlock doors and arm security system"
+      },
+      {
+        "id": "media_playback",
+        "desc": "Play music, pause podcast, or adjust speaker volume"
+      },
+      {
+        "id": "vacuum_cleaning",
+        "desc": "Start robot vacuum cleaner in specific rooms"
+      },
+      {
+        "id": "alarms_timers",
+        "desc": "Set alarm, wake-up timer, or reminder countdown"
+      },
+      {
+        "id": "camera_feed",
+        "desc": "Show security camera video feed or doorbell camera"
+      },
+      {
+        "id": "__insufficient_evidence__",
+        "desc": "insufficient evidence"
+      }
+    ]
+  },
+  "function_correlation": {
+    "key": "function_correlation",
+    "name": "Cookbook T09: Trading API (Rolling Correlation)",
+    "question": "Which API tool function should be invoked for this request?",
+    "text": "plot rolling correlation between nvda and spy for the past month",
+    "candidates": [
+      {
+        "id": "plot_price",
+        "desc": "Chart stock historical price line or candlesticks"
+      },
+      {
+        "id": "market_summary",
+        "desc": "Get broad market index summary and performance"
+      },
+      {
+        "id": "compare_returns",
+        "desc": "Compare percentage returns across multiple tickers"
+      },
+      {
+        "id": "rolling_correlation",
+        "desc": "Calculate rolling correlation between symbol and benchmark"
+      },
+      {
+        "id": "volatility_calc",
+        "desc": "Compute historical price volatility and annualized standard deviation"
+      },
+      {
+        "id": "top_movers",
+        "desc": "List top daily market gainers or losers"
+      },
+      {
+        "id": "__insufficient_evidence__",
+        "desc": "insufficient evidence"
+      }
+    ]
+  },
   "custom": {
     "key": "custom",
     "name": "Custom Schema",
