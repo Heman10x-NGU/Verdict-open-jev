@@ -27,7 +27,6 @@ from core.formatting import build_model_input
 from gliclass import GLiClassModel
 from scripts.gen_suite.tasks import TASK_REGISTRY, FramingArm, TaskItem, get_task_candidates
 
-WORKSPACE_DIR = Path("/Users/heman10x/Downloads/claude_dev/personal_projects/Mind-Palace/RLCD-demo")
 DATA_GEN_DIR = WORKSPACE_DIR / "data" / "gen"
 CACHE_DIR = WORKSPACE_DIR / "reports" / "v2" / "_cache"
 
@@ -67,17 +66,21 @@ def run_task_arm_inference(
     batch_size: int = 32,
 ) -> tuple[np.ndarray, np.ndarray, list[str], list[str]]:
     """Run inference for one task and one framing arm with length-sorted batching."""
-    spec = TASK_REGISTRY[task_id]
-    arm_candidates = get_task_candidates(task_id, arm)
-    candidate_ids = [c["id"] for c in arm_candidates]
-    candidate_labels = [c["description"] for c in arm_candidates]
-    k_classes = len(candidate_labels)
-    
-    # Precompute prompt length for each item and sort to minimize padding waste
     indexed_prompts = []
     for orig_idx, item in enumerate(items):
+        if task_id == "T06":
+            arm_candidates = item.candidates
+        else:
+            arm_candidates = get_task_candidates(task_id, arm)
+        candidate_ids = [c["id"] for c in arm_candidates]
+        candidate_labels = [c["description"] for c in arm_candidates]
         prompt = build_model_input(item.question, item.context, candidate_labels)
-        indexed_prompts.append((orig_idx, prompt, item.id, item.target_id))
+        target_idx = (
+            candidate_ids.index(item.target_id)
+            if item.target_id in candidate_ids
+            else candidate_ids.index(INSUFFICIENT_EVIDENCE_ID)
+        )
+        indexed_prompts.append((orig_idx, prompt, item.id, target_idx, candidate_labels, candidate_ids))
         
     indexed_prompts.sort(key=lambda x: len(x[1]))
     
@@ -101,18 +104,27 @@ def run_task_arm_inference(
             outputs = model(**tokens)
             raw_logits = outputs.logits  # Shape: (batch_size, max_labels)
             
-            for b_sub, (orig_idx, _, item_id, target_id) in enumerate(b_chunk):
+            for b_sub, (orig_idx, _, item_id, target_idx, candidate_labels, _) in enumerate(b_chunk):
+                k_classes = len(candidate_labels)
                 item_logits = raw_logits[b_sub, :k_classes].float().cpu().numpy()
-                target_idx = candidate_ids.index(target_id) if target_id in candidate_ids else candidate_ids.index("__insufficient_evidence__")
                 
                 ordered_logits[orig_idx] = item_logits
                 ordered_targets[orig_idx] = target_idx
                 ordered_ids[orig_idx] = item_id
                 
-    logits_arr = np.stack(ordered_logits, axis=0)  # Shape: (N, K)
-    targets_arr = np.array(ordered_targets, dtype=np.int64)  # Shape: (N,)
+    max_k = max(l.shape[0] for l in ordered_logits)
+    logits_arr = np.zeros((len(items), max_k), dtype=np.float32)
+    for i, l in enumerate(ordered_logits):
+        logits_arr[i, : l.shape[0]] = l
+        
+    targets_arr = np.array(ordered_targets, dtype=np.int64)
+    default_cids = (
+        [c["id"] for c in get_task_candidates(task_id, arm)]
+        if task_id != "T06"
+        else [c["id"] for c in items[0].candidates]
+    )
     
-    return logits_arr, targets_arr, ordered_ids, candidate_ids
+    return logits_arr, targets_arr, ordered_ids, default_cids
 
 
 def main():

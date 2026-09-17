@@ -211,6 +211,42 @@
       }
     ]
   },
+  "shopify_division": {
+    "key": "shopify_division",
+    "name": "Cookbook T05: Shopify Retail Division (Beam)",
+    "question": "Which major retail division best categorizes this product merchandise?",
+    "text": "Men's Classic Slim Fit Cotton Crewneck T-Shirt in Navy Blue, Size Large",
+    "candidates": [
+      {
+        "id": "apparel_accessories_root",
+        "desc": "Apparel, Footwear, Jewelry and Luggage Accessories"
+      },
+      {
+        "id": "electronics_root",
+        "desc": "Consumer Electronics, Computers, Audio and Telephony"
+      },
+      {
+        "id": "home_garden_root",
+        "desc": "Home Decor, Furniture, Kitchenware, Garden and Patio"
+      },
+      {
+        "id": "sporting_goods_root",
+        "desc": "Sporting Goods, Exercise Equipment, Outdoor and Toys"
+      },
+      {
+        "id": "health_food_root",
+        "desc": "Health, Beauty, Food and Baby Supplies"
+      },
+      {
+        "id": "industrial_auto_root",
+        "desc": "Business, Industrial, Automotive and Tools"
+      },
+      {
+        "id": "__insufficient_evidence__",
+        "desc": "insufficient evidence"
+      }
+    ]
+  },
   "custom": {
     "key": "custom",
     "name": "Custom Schema",

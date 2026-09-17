@@ -43,19 +43,32 @@ def format_num(val: float | None, decimals: int = 4) -> str:
 
 
 def render_top3_table(summary: dict[str, Any]) -> str:
-    """Render top 3 promoted cookbook use cases."""
+    """Render promoted public cookbook use cases."""
     ranked = summary.get("ranked_tasks", [])
-    top3 = ranked[:3]
-
-    lines = [
-        "| Rank | Task ID | Cookbook Recipe | Evaluated Use Case | Optimal Checkpoint | Framing Arm | Accuracy | Adaptive ECE | Over-Abstention |",
-        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
+    # Filter strictly for public tasks that passed all 5 promotion gates
+    promoted = [
+        t for t in ranked
+        if t.get("provenance") == "public" and t["promotion_evaluation"]["passed_all_gates"]
     ]
 
-    for rank_idx, t in enumerate(top3, start=1):
+    if not promoted:
+        return (
+            "| Task ID | Status | Benchmark Requirement |\n"
+            "| :--- | :--- | :--- |\n"
+            "| None | No zero-shot tasks cleared all 5 gates simultaneously | Requires task accuracy >= 85.0%, adaptive ECE <= 5.0%, over-abstention <= 10.0%, public provenance |"
+        )
+
+    lines = [
+        "| Rank | Task ID | Cookbook Recipe | Evaluated Use Case | Provenance | Optimal Checkpoint | Framing Arm | Task Accuracy | Adaptive ECE | Over-Abstention |",
+        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
+    ]
+
+    for rank_idx, t in enumerate(promoted, start=1):
         pe = t["promotion_evaluation"]
+        winner = pe["selected_max_of_6"]
+        cookbook_url = f"https://docs.typesafe.ai/cookbooks/{t['cookbook']}"
         lines.append(
-            f"| {rank_idx} | `{t['task_id']}` | [{t['name']}](RLCD%20Cookbook/{t['cookbook']}.md) | {t['description']} | `{pe['best_checkpoint']}` | `{pe['best_arm']}` | {format_pct(pe['best_accuracy'])} | {format_pct(pe['best_ece_adaptive'])} | {format_pct(pe['best_over_abstention'])} |"
+            f"| {rank_idx} | `{t['task_id']}` | [{t['name']}]({cookbook_url}) | {t['description']} | `{t['provenance']}` | `{winner['checkpoint']}` | `{winner['arm']}` | {format_pct(winner['accuracy_task_subset'])} | {format_pct(winner['ece_adaptive'])} | {format_pct(winner['over_abstention_rate'])} |"
         )
 
     return "\n".join(lines)
@@ -66,17 +79,17 @@ def render_full_matrix_table(summary: dict[str, Any]) -> str:
     ranked = summary.get("ranked_tasks", [])
     
     lines = [
-        "| Task ID | Task Name | Cardinality ($K$) | Winning Checkpoint | Winning Arm | Accuracy | Adaptive ECE | Over-Abstention | Proper Brier | Gate Status |",
-        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
+        "| Task ID | Task Name | Provenance | Cardinality ($K$) | Winning Checkpoint | Winning Arm | Task Accuracy | Adaptive ECE | Over-Abstention | Proper Brier | Gate Status |",
+        "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |",
     ]
 
     for t in sorted(ranked, key=lambda x: x["task_id"]):
         pe = t["promotion_evaluation"]
+        winner = pe["selected_max_of_6"]
         status = "PASSED (Promoted)" if pe["passed_all_gates"] else "Failed Gate"
-        # Find best arm result object
-        best_obj = next((m for m in t["matrix"] if m["checkpoint"] == pe["best_checkpoint"] and m["arm"] == pe["best_arm"]), t["matrix"][0])
+        cookbook_url = f"https://docs.typesafe.ai/cookbooks/{t['cookbook']}"
         lines.append(
-            f"| `{t['task_id']}` | {t['name']} | $K={t['k_cardinality']}$ | `{pe['best_checkpoint']}` | `{pe['best_arm']}` | {format_pct(pe['best_accuracy'])} | {format_pct(pe['best_ece_adaptive'])} | {format_pct(pe['best_over_abstention'])} | {format_num(best_obj.get('brier_score', 0.0))} | {status} |"
+            f"| `{t['task_id']}` | [{t['name']}]({cookbook_url}) | `{t['provenance']}` | $K={t['k_cardinality']}$ | `{winner['checkpoint']}` | `{winner['arm']}` | {format_pct(winner['accuracy_task_subset'])} | {format_pct(winner['ece_adaptive'])} | {format_pct(winner['over_abstention_rate'])} | {format_num(winner.get('brier_score', 0.0))} | {status} |"
         )
 
     return "\n".join(lines)

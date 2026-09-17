@@ -10,6 +10,7 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
 FramingArm = Literal["neutral", "verbose", "banking_framed"]
+ProvenanceType = Literal["public", "authored"]
 
 INSUFFICIENT_EVIDENCE_ID = "__insufficient_evidence__"
 
@@ -55,7 +56,8 @@ class TaskSpec:
     k_cardinality: int
     demo_value: str
     description: str
-    provenance: str
+    provenance: ProvenanceType
+    provenance_details: str
     default_question: str
     # Candidates dictionary: {arm: {candidate_id: description}}
     candidate_arms: dict[FramingArm, dict[str, str]]
@@ -203,29 +205,29 @@ T05_ARMS: dict[FramingArm, dict[str, str]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Task 06: Banking77 in-domain control (5 options)
+# Task 06: Banking77 in-domain control (5 options per item dynamically loaded)
 # ---------------------------------------------------------------------------
 T06_ARMS: dict[FramingArm, dict[str, str]] = {
     "neutral": {
-        "card_arrival": "Inquiry about physical card delivery timeline and arrival",
-        "card_linking": "Questions regarding linking a payment card to an account",
-        "card_payment_fee_charged": "Dispute or question regarding card payment fees charged",
-        "compromised_card": "Reporting a compromised, hacked, or stolen payment card",
-        INSUFFICIENT_EVIDENCE_ID: "Insufficient evidence or out-of-scope customer banking inquiry",
+        "card_arrival": "Inquire about whether a newly ordered debit or credit card has arrived or when it will arrive in the mail",
+        "card_linking": "Connect or link a new physical or virtual bank card to an account or digital wallet",
+        "card_payment_fee_charged": "Inquire about unexplained extra fees or service surcharges applied to a card payment",
+        "compromised_card": "Report suspected unauthorized card cloning, skimmed magnetic stripe, or fraudulent card transactions",
+        INSUFFICIENT_EVIDENCE_ID: "insufficient evidence",
     },
     "verbose": {
-        "card_arrival": "Customer asking when their physical plastic card will arrive in the mail and delivery tracking status",
-        "card_linking": "Customer attempting to link or connect their debit/credit card to digital wallets or mobile app accounts",
-        "card_payment_fee_charged": "Customer inquiring why an extra charge, transaction surcharge, or unexpected card fee was billed",
-        "compromised_card": "Customer reporting unauthorized suspicious transactions, lost wallet, or compromised card security",
-        INSUFFICIENT_EVIDENCE_ID: "Insufficient evidence or inquiry unrelated to card arrival, linking, fees, or security compromise",
+        "card_arrival": "Inquire about whether a newly ordered debit or credit card has arrived or when it will arrive in the mail",
+        "card_linking": "Connect or link a new physical or virtual bank card to an account or digital wallet",
+        "card_payment_fee_charged": "Inquire about unexplained extra fees or service surcharges applied to a card payment",
+        "compromised_card": "Report suspected unauthorized card cloning, skimmed magnetic stripe, or fraudulent card transactions",
+        INSUFFICIENT_EVIDENCE_ID: "insufficient evidence",
     },
     "banking_framed": {
-        "card_arrival": "Core banking dispatch inquiry regarding new physical debit card postal delivery",
-        "card_linking": "Retail banking integration inquiry for card-to-account linking and digital tokenization",
-        "card_payment_fee_charged": "Retail banking dispute regarding fee assessment and card transaction surcharges",
-        "compromised_card": "Fraud prevention emergency report regarding compromised payment card credentials",
-        INSUFFICIENT_EVIDENCE_ID: "Out-of-scope query or insufficient evidence for supported card operations",
+        "card_arrival": "Inquire about whether a newly ordered debit or credit card has arrived or when it will arrive in the mail",
+        "card_linking": "Connect or link a new physical or virtual bank card to an account or digital wallet",
+        "card_payment_fee_charged": "Inquire about unexplained extra fees or service surcharges applied to a card payment",
+        "compromised_card": "Report suspected unauthorized card cloning, skimmed magnetic stripe, or fraudulent card transactions",
+        INSUFFICIENT_EVIDENCE_ID: "insufficient evidence",
     },
 }
 
@@ -259,7 +261,7 @@ T07_ARMS: dict[FramingArm, dict[str, str]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Task 08: Smart home command interpretation (8 actions)
+# Task 08: Smart home command interpretation (8 actions, authored fixture)
 # ---------------------------------------------------------------------------
 T08_ACTIONS_NEUTRAL = {
     "lights_control": "Turn on, turn off, or dim household lights",
@@ -285,7 +287,7 @@ T08_ARMS: dict[FramingArm, dict[str, str]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Task 09: Function and tool routing (20 typed functions + abstention = 21)
+# Task 09: Function and tool routing (20 typed functions + abstention = 21, authored fixture)
 # ---------------------------------------------------------------------------
 T09_FUNCTIONS_NEUTRAL = {
     "plot_price": "Chart stock historical price line or candlesticks",
@@ -324,7 +326,7 @@ T09_ARMS: dict[FramingArm, dict[str, str]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Task 10: Agent skill selection (20 skills + abstention = 21)
+# Task 10: Agent skill selection (20 skills + abstention = 21, authored fixture)
 # ---------------------------------------------------------------------------
 T10_SKILLS_NEUTRAL = {
     "apple_notes": "Manage Apple Notes via memo CLI: create, search, edit notes",
@@ -421,7 +423,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=3,
         demo_value="High",
         description="Classify whether an incoming email is a fraudulent phishing attempt, legitimate correspondence, or requires abstention.",
-        provenance="HuggingFace ealvaradob/phishing-dataset and SetFit/enron_spam public benchmarks",
+        provenance="public",
+        provenance_details="HuggingFace ealvaradob/phishing-dataset and SetFit/enron_spam public benchmarks",
         default_question="Classify whether this email is a fraudulent phishing attempt, legitimate correspondence, or requires abstention.",
         candidate_arms=T01_ARMS,
     ),
@@ -433,7 +436,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=3,
         demo_value="High",
         description="Evaluate whether a user prompt contains adversarial jailbreak intent or is benign instruction.",
-        provenance="TrustAIRLab in-the-wild jailbreak prompts and Stanford Alpaca instruction dataset",
+        provenance="public",
+        provenance_details="TrustAIRLab in-the-wild jailbreak prompts and Stanford Alpaca instruction dataset",
         default_question="Evaluate whether this prompt is an adversarial jailbreak attempt, a benign user query, or insufficient evidence.",
         candidate_arms=T02_ARMS,
     ),
@@ -445,7 +449,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=5,
         demo_value="Medium",
         description="Classify prompt hazard severity level into benign, low-risk, jailbreak, or critical security threat.",
-        provenance="Multi-tier severity mapping over in-the-wild jailbreaks and benign instructions",
+        provenance="public",
+        provenance_details="Multi-tier severity mapping over in-the-wild jailbreaks and benign instructions",
         default_question="Classify the security hazard severity level of this prompt.",
         candidate_arms=T03_ARMS,
     ),
@@ -457,7 +462,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=25,
         demo_value="Medium",
         description="Classify merchandise descriptions into 24 distinct Shopify retail product categories plus abstention.",
-        provenance="Shopify official public open-source product taxonomy",
+        provenance="public",
+        provenance_details="Shopify official public open-source product taxonomy",
         default_question="Which product category best matches this merchandise?",
         candidate_arms=T04_ARMS,
     ),
@@ -469,7 +475,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=7,
         demo_value="High",
         description="Top-level division routing for hierarchical beam search classification across deep catalog trees.",
-        provenance="Shopify official product taxonomy division clustering",
+        provenance="public",
+        provenance_details="Shopify official product taxonomy division clustering",
         default_question="Which top-level merchandise division does this product belong to?",
         candidate_arms=T05_ARMS,
     ),
@@ -481,7 +488,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=5,
         demo_value="Baseline",
         description="In-domain control benchmark evaluating customer banking intent classification across card lifecycle operations.",
-        provenance="PolyAI Banking77 held-out test split under data/real_banking_test.jsonl",
+        provenance="public",
+        provenance_details="PolyAI Banking77 held-out test split under data/real_banking_test.jsonl",
         default_question="What is the customer's primary banking intent in this inquiry?",
         candidate_arms=T06_ARMS,
     ),
@@ -493,7 +501,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=11,
         demo_value="High",
         description="Route multi-domain assistant queries across 10 functional domains plus out-of-scope abstention.",
-        provenance="CLINC150 out-of-scope benchmark test partition",
+        provenance="public",
+        provenance_details="CLINC150 out-of-scope benchmark test partition",
         default_question="Which assistant service domain should handle this request?",
         candidate_arms=T07_ARMS,
     ),
@@ -505,7 +514,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=8,
         demo_value="Highest",
         description="Interpret natural language smart home utterances into 7 discrete device control actions plus abstention.",
-        provenance="Project-authored fixture with deterministic ground truth, following openjev specification",
+        provenance="authored",
+        provenance_details="Project-authored fixture with deterministic ground truth, following openjev specification",
         default_question="Which home automation action does the user want executed?",
         candidate_arms=T08_ARMS,
     ),
@@ -517,7 +527,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=21,
         demo_value="High",
         description="Map natural language trading and account commands to 20 typed API functions plus abstention.",
-        provenance="Project-authored fixture with deterministic type signatures and parameter constraints",
+        provenance="authored",
+        provenance_details="Project-authored fixture with deterministic type signatures and parameter constraints",
         default_question="Which API tool function should be invoked for this request?",
         candidate_arms=T09_ARMS,
     ),
@@ -529,7 +540,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=21,
         demo_value="Medium",
         description="Select the optimal specialized agent skill from the 20-tool Hermes catalog for a given user request.",
-        provenance="Nous Research Hermes Agent skill roster and tool definitions",
+        provenance="authored",
+        provenance_details="Nous Research Hermes Agent skill roster and tool definitions",
         default_question="Which agent skill from the Hermes catalog should be loaded?",
         candidate_arms=T10_ARMS,
     ),
@@ -541,7 +553,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=10,
         demo_value="Medium",
         description="Re-rank 9 candidate retrieved passages to select the direct answering citation or abstain.",
-        provenance="MTEB SciFact and legal benchmark query-passage evaluation pairs",
+        provenance="public",
+        provenance_details="MTEB SciFact benchmark query-passage evaluation pairs",
         default_question="Which candidate passage directly answers the user search query?",
         candidate_arms=T11_ARMS,
     ),
@@ -553,7 +566,8 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
         k_cardinality=3,
         demo_value="High",
         description="Screen retrieved knowledge chunks to detect adversarial prompt injection before answering model ingestion.",
-        provenance="Deepset prompt-injections and verified clean knowledge passages",
+        provenance="public",
+        provenance_details="Deepset prompt-injections and verified clean knowledge passages",
         default_question="Classify whether this retrieved document is clean relevant context, a prompt injection payload, or noise.",
         candidate_arms=T12_ARMS,
     ),
