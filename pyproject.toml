@@ -27,7 +27,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["core*", "rlcd*"]
+include = ["core*", "rlcd*", "openjev*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
