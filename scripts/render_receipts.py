@@ -175,6 +175,9 @@ def replace_generated_section(content: str, section_name: str, new_content: str)
         raise ValueError(f"Marker '{start_tag}' not found in document.")
 
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Render receipt tables into Markdown files.")
     parser.add_argument("--reports_dir", type=str, default="reports/v2")
@@ -182,6 +185,8 @@ def main() -> None:
     args = parser.parse_args()
 
     rep_dir = Path(args.reports_dir)
+    if not rep_dir.is_absolute():
+        rep_dir = REPO_ROOT / rep_dir
     eval_report = load_json(rep_dir / "evaluation_report_v2.json")
     e7_report = load_json(rep_dir / "exp_e7_latency.json")
 
@@ -193,13 +198,13 @@ def main() -> None:
     latency_tbl = render_latency_table(e7_report)
 
     files_to_update = {
-        Path("README.md"): [
+        REPO_ROOT / "README.md": [
             ("held_out_evaluation", held_out_tbl),
             ("cardinality_scaling", cardinality_tbl),
             ("out_of_scope_slices", oos_tbl),
             ("empirical_experiments", experiments_tbl),
         ],
-        Path("WALKTHROUGH.md"): [
+        REPO_ROOT / "WALKTHROUGH.md": [
             ("walkthrough_benchmark_receipts", held_out_tbl),
             ("walkthrough_experiments", experiments_tbl),
             ("walkthrough_slices", cardinality_tbl),

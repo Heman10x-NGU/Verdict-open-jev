@@ -12,8 +12,8 @@ import urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
-WORKSPACE_DIR = Path("/Users/heman10x/Downloads/claude_dev/personal_projects/Mind-Palace/RLCD-demo")
-COOKBOOK_DIR = WORKSPACE_DIR / "RLCD Cookbook"
+WORKSPACE_DIR = Path(__file__).resolve().parent.parent
+COOKBOOK_DIR = WORKSPACE_DIR / "cookbooks"
 
 COOKBOOK_TARGETS = [
     # Core Cookbooks
@@ -244,7 +244,9 @@ def fetch_and_save(target: dict) -> tuple[str, bool, str]:
     except Exception as e:
         # Fallback using cloakbrowser if available
         try:
-            sys.path.insert(0, "/Users/heman10x/Downloads/claude_dev/oss-repos/scraping-and-trends/cloak-browser/CloakBrowser")
+            cloak_path = os.environ.get("CLOAK_BROWSER_PATH")
+            if cloak_path and Path(cloak_path).exists():
+                sys.path.insert(0, cloak_path)
             from cloakbrowser import launch
             browser = launch(headless=True, humanize=True)
             page = browser.new_page()
@@ -306,7 +308,7 @@ def generate_index_md(targets: list[dict]):
         "- **Confidence**: Reports certainty on a [0.0, 1.0] scale orthogonal to probability, enabling automated confidence-gated policy routing.",
         "",
         "---",
-        "*Scraped and cataloged into `RLCD Cookbook/` on 2026-09-17.*"
+        "*Scraped and cataloged into `cookbooks/` on 2026-09-17.*"
     ])
     
     index_path.write_text("\n".join(lines) + "\n", encoding="utf-8")

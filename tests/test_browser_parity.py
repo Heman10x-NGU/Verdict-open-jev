@@ -16,8 +16,11 @@ import pytest
 from core.formatting import build_model_input
 
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
 def test_prompt_contract_byte_parity() -> None:
-    contract_path = Path("webgpu-demo/prompt_contract.json")
+    contract_path = REPO_ROOT / "webgpu-demo" / "prompt_contract.json"
     assert contract_path.exists(), "webgpu-demo/prompt_contract.json must exist"
 
     with open(contract_path, "r", encoding="utf-8") as f:
@@ -47,7 +50,7 @@ def test_presets_descriptions_match_glossary() -> None:
     from core.banking_glossary import BANKING_GLOSSARY
     from core.primitives import INSUFFICIENT_EVIDENCE_DESC, INSUFFICIENT_EVIDENCE_ID
 
-    presets_path = Path("webgpu-demo/presets.json")
+    presets_path = REPO_ROOT / "webgpu-demo" / "presets.json"
     assert presets_path.exists(), "webgpu-demo/presets.json must exist"
 
     with open(presets_path, "r", encoding="utf-8") as f:
@@ -65,13 +68,13 @@ def test_presets_descriptions_match_glossary() -> None:
 
 def test_browser_python_prediction_parity() -> None:
     """Verify that Python ONNX inference produces identical probabilities on card_arrival preset."""
-    onnx_path = Path("artifacts/v2/model.onnx")
+    onnx_path = REPO_ROOT / "artifacts" / "v2" / "model.onnx"
     if not onnx_path.exists():
-        onnx_path = Path("artifacts/v2/openjev_modernbert.onnx")
-    cal_path = Path("artifacts/v2/calibrator.json")
+        onnx_path = REPO_ROOT / "artifacts" / "v2" / "openjev_modernbert.onnx"
+    cal_path = REPO_ROOT / "artifacts" / "v2" / "calibrator.json"
     if not cal_path.exists():
-        cal_path = Path("artifacts/v2/calibrator_modernbert.json")
-    presets_path = Path("webgpu-demo/presets.json")
+        cal_path = REPO_ROOT / "artifacts" / "v2" / "calibrator_modernbert.json"
+    presets_path = REPO_ROOT / "webgpu-demo" / "presets.json"
 
     if not onnx_path.exists() or not cal_path.exists():
         pytest.skip("ONNX model or calibrator not found in artifacts/v2/")
