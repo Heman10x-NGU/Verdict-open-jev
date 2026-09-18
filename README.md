@@ -241,6 +241,21 @@ The playground allows you to edit input text, modify candidate descriptions, rem
 
 All metrics below reflect evaluation on the held-out test split (1,000 examples) and dedicated challenge slices, evaluated under strictly proper scoring rules (Brier score, negative log-likelihood) and Expected Calibration Error (ECE). Checkpoint selection was governed strictly by validation negative log-likelihood (NLL).
 
+### External Decision Benchmark: LocalLLaMA/typed-decisions
+
+![AI Model Calibration Error](assets/jev_vs_verdict_calibration.jpg)
+
+Empirical evaluation on the `LocalLLaMA/typed-decisions` benchmark (400 cases, 2,000 decisions across 4 enterprise workflows: agent trace observability, customer service, invoice processing, and security incidents) compared against TypeSafe AI's Jev:
+
+| Model / Baseline | Calibration Error (ECE) ↓ | Top-1 Accuracy ↑ | Brier Score ↓ | Latency / Environment |
+| :--- | :--- | :--- | :--- | :--- |
+| **Verdict Baseline (TF-IDF + LogReg)** | **0.0207** | **66.10%** | **0.1520** | 11s on CPU (char 3-6 n-grams, C=5.0) |
+| TypeSafe AI Jev | 0.1440 | 68.00% | N/A | Published workflow evaluation average |
+| Uniform Random Guessing | 0.0190 | 29.85% | 0.2433 | Theoretical uniform baseline across dynamic candidate slices |
+| Majority Class Floor | 0.0387 | 48.35% | N/A | Most frequent training class per schema key |
+
+*Full reproducibility script: [`scripts/analysis/reference_floors.py`](scripts/analysis/reference_floors.py), raw metrics: [`reports/reference_floors.json`](reports/reference_floors.json).*
+
 ### Primary held-out evaluation (1,000 cases, 5 candidates)
 
 <!-- BEGIN GENERATED: held_out_evaluation -->
