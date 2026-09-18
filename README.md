@@ -357,7 +357,7 @@ Empirical evaluation of OpenJev across 12 structured decision tasks, comparing t
 <!-- BEGIN GENERATED: cookbook_sweep_top3 -->
 | Rank | Task ID | Cookbook Recipe | Evaluated Use Case | Provenance | Optimal Checkpoint | Framing Arm | Task Accuracy | Adaptive ECE | Over-Abstention |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | `T06` | [Banking77 In-Domain Control](https://docs.typesafe.ai/cookbooks/n/a (baseline anchor)) | In-domain control benchmark evaluating customer banking intent classification across card lifecycle operations. | `public` | `finetuned` | `banking_framed` | 95.2% | 0.8% | 1.1% |
+| 1 | `T06` | [Banking77 In-Domain Control](https://docs.typesafe.ai/cookbooks/banking77_intent_routing) | In-domain control benchmark evaluating customer banking intent classification across card lifecycle operations. | `public` | `finetuned` | `banking_framed` | 95.2% | 0.8% | 1.1% |
 | 2 | `T05` | [Shopify Taxonomy (Hierarchical Beam)](https://docs.typesafe.ai/cookbooks/hierarchical_classification) | Top-level division routing for hierarchical beam search classification across deep catalog trees. | `public` | `finetuned` | `banking_framed` | 94.7% | 4.0% | 0.1% |
 | 3 | `T04` | [Shopify Product Taxonomy (Flat Leaf)](https://docs.typesafe.ai/cookbooks/hierarchical_classification) | Classify merchandise descriptions into 24 distinct Shopify retail product categories plus abstention. | `public` | `finetuned` | `neutral` | 94.6% | 2.6% | 0.1% |
 <!-- END GENERATED: cookbook_sweep_top3 -->
@@ -372,7 +372,7 @@ Empirical evaluation of OpenJev across 12 structured decision tasks, comparing t
 | `T03` | [Hazard Severity Routing](https://docs.typesafe.ai/cookbooks/llm_guardrails) | `public` | $K=5$ | `base` | `neutral` | 26.5% | 24.3% | 13.6% | 0.8686 | Failed Gate |
 | `T04` | [Shopify Product Taxonomy (Flat Leaf)](https://docs.typesafe.ai/cookbooks/hierarchical_classification) | `public` | $K=25$ | `finetuned` | `neutral` | 94.6% | 2.6% | 0.1% | 0.2354 | PASSED (Promoted) |
 | `T05` | [Shopify Taxonomy (Hierarchical Beam)](https://docs.typesafe.ai/cookbooks/hierarchical_classification) | `public` | $K=7$ | `finetuned` | `banking_framed` | 94.7% | 4.0% | 0.1% | 0.2214 | PASSED (Promoted) |
-| `T06` | [Banking77 In-Domain Control](https://docs.typesafe.ai/cookbooks/n/a (baseline anchor)) | `public` | $K=5$ | `finetuned` | `banking_framed` | 95.2% | 0.8% | 1.1% | 0.0756 | PASSED (Promoted) |
+| `T06` | [Banking77 In-Domain Control](https://docs.typesafe.ai/cookbooks/banking77_intent_routing) | `public` | $K=5$ | `finetuned` | `banking_framed` | 95.2% | 0.8% | 1.1% | 0.0756 | PASSED (Promoted) |
 | `T07` | [CLINC150 Intent Domain Routing](https://docs.typesafe.ai/cookbooks/patterns_intent_routing) | `public` | $K=11$ | `finetuned` | `verbose` | 42.9% | 29.2% | 8.6% | 0.8480 | Failed Gate |
 | `T08` | [Smart Home Command Interpretation](https://docs.typesafe.ai/cookbooks/demos_smart_home) | `authored` | $K=8$ | `base` | `neutral` | 100.0% | 9.7% | 0.0% | 0.1635 | Failed Gate |
 | `T09` | [Function and Tool Routing](https://docs.typesafe.ai/cookbooks/function_calling) | `authored` | $K=21$ | `finetuned` | `verbose` | 100.0% | 2.4% | 0.0% | 0.1648 | Failed Gate |

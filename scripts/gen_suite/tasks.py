@@ -483,7 +483,7 @@ TASK_REGISTRY: dict[str, TaskSpec] = {
     "T06": TaskSpec(
         id="T06",
         name="Banking77 In-Domain Control",
-        cookbook="n/a (baseline anchor)",
+        cookbook="banking77_intent_routing",
         source="PolyAI Banking77 (local test set)",
         k_cardinality=5,
         demo_value="Baseline",

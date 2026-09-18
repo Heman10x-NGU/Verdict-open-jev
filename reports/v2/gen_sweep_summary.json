@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17T21:28:39.126739+00:00",
+  "generated_at": "2026-09-18T04:25:33.786669+00:00",
   "is_smoke": false,
   "total_tasks_evaluated": 12,
   "promoted_tasks_count": 3,
@@ -12,7 +12,7 @@
     {
       "task_id": "T06",
       "name": "Banking77 In-Domain Control",
-      "cookbook": "n/a (baseline anchor)",
+      "cookbook": "banking77_intent_routing",
       "source": "PolyAI Banking77 (local test set)",
       "provenance": "public",
       "provenance_details": "PolyAI Banking77 held-out test split under data/real_banking_test.jsonl",
