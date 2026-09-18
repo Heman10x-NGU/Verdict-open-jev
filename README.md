@@ -13,12 +13,6 @@ Instead of generating free-form conversational text that software must parse and
 
 ---
 
-## Key topics and buzzword taxonomy
-
-`TypeSafe AI` • `OpenJev` • `Jev` • `RLCD (Reinforcement Learning for Calibrated Decisions)` • `Non-Autoregressive Decision Engine` • `Foundational Decision Model` • `Post-Trained Encoder` • `System 1 AI` • `ModernBERT` • `GLiClass` • `WebGPU In-Browser Inference` • `Zero-Token Generation` • `Structured Outputs` • `Constrained Decoding` • `Expected Calibration Error (ECE)` • `Brier Score Proper Loss` • `Temperature Scaling` • `ONNX Runtime Web` • `Edge AI` • `Deterministic Policy Routing`
-
----
-
 ## The core thesis: Jevons\' paradox in software automation
 
 ![Why Jev matters](assets/why-jev-matters.jpg)
