@@ -17,9 +17,13 @@ Instead of generating free-form conversational text that software must parse and
 
 These are inference fixes, not a retrain. The weights are byte-identical to the published checkpoint. Measured on the 231 public JevBench tasks.
 
-![Inference Engine v1.4: Metric Improvements](assets/v1.4/benchmark-deltas.png)
+<p align="center">
+  <img src="assets/v1.4/benchmark-leaderboard-chart.png" alt="JevBench Score Leaderboard: openJev Verdict v1.4" width="100%">
+</p>
 
-![JevBench Public Evaluation Breakdown](assets/v1.4/benchmark-table.png)
+<p align="center">
+  <img src="assets/v1.4/benchmark-leaderboard-table.png" alt="JevBench Detailed Evaluation Table: openJev Verdict v1.4" width="100%">
+</p>
 
 The update addresses three defects in the inference engine:
 
