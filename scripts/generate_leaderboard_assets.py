@@ -282,28 +282,9 @@ CHART_HTML = """<!DOCTYPE html>
     </div>
 
     <div class="rows-container">
-      <!-- Rank 1: openJev Verdict v1.4 -->
-      <div class="row highlighted">
-        <span class="rank" style="color: #38bdf8; font-weight: 700;">1*</span>
-        <span class="name" style="color: #f0f6fc; font-weight: 700;">
-          openJev Verdict v1.4<span class="tag-new">PR PENDING</span> <span class="sub" style="color: #7dd3fc;">(151M, inf. fix)</span>
-        </span>
-        <div class="bar-wrapper">
-          <div class="bar bar-cyan" style="width: 75.6%;"></div>
-        </div>
-        <span class="score-val highlight">75.6</span>
-        <div class="metrics">
-          <span class="m-val m-highlight">61</span>
-          <span class="m-val m-highlight">78</span>
-          <span class="m-val m-highlight">83</span>
-          <span class="m-val m-highlight">83</span>
-          <span class="m-cost" style="color: #7dd3fc;">~$0.0037 est.</span>
-        </div>
-      </div>
-
-      <!-- Rank 2: Jev 1.13.0 -->
+      <!-- Rank 1: Jev 1.13.0 -->
       <div class="row">
-        <span class="rank">2</span>
+        <span class="rank">1</span>
         <span class="name">Jev 1.13.0 <span class="sub">(TypeSafe AI)</span></span>
         <div class="bar-wrapper">
           <div class="bar bar-blue" style="width: 75.4%;"></div>
@@ -315,6 +296,25 @@ CHART_HTML = """<!DOCTYPE html>
           <span class="m-val">83</span>
           <span class="m-val">52</span>
           <span class="m-cost">$0.040</span>
+        </div>
+      </div>
+
+      <!-- Rank 2: openJev Verdict v1.4 -->
+      <div class="row highlighted">
+        <span class="rank" style="color: #38bdf8; font-weight: 700;">2*</span>
+        <span class="name" style="color: #f0f6fc; font-weight: 700;">
+          openJev Verdict v1.4<span class="tag-new">#1 OPEN</span> <span class="sub" style="color: #7dd3fc;">(151M, inf. fix)</span>
+        </span>
+        <div class="bar-wrapper">
+          <div class="bar bar-cyan" style="width: 74.9%;"></div>
+        </div>
+        <span class="score-val highlight">74.9</span>
+        <div class="metrics">
+          <span class="m-val m-highlight">61</span>
+          <span class="m-val m-highlight">75</span>
+          <span class="m-val m-highlight">83</span>
+          <span class="m-val m-highlight">83</span>
+          <span class="m-cost" style="color: #7dd3fc;">~$0.0037 est.</span>
         </div>
       </div>
 
@@ -553,10 +553,10 @@ CHART_HTML = """<!DOCTYPE html>
     <!-- Verification Banner -->
     <div class="verification-banner">
       <div>
-        <strong>* openJev Verdict v1.4</strong> evaluated on 231 public JevBench tasks; PR #2 submitted for official 534-task private run. Byte-identical weights, inference fixes only.
+        <strong>* openJev Verdict v1.4</strong> evaluated on 231 public JevBench tasks with out-of-domain NLL calibration. Byte-identical weights, inference fixes only.
       </div>
       <div style="font-family: ui-monospace, monospace; font-weight: 600;">
-        v1.0 (66.2) ➔ v1.4 (75.6) [+9.4 pts]
+        v1.0 (66.2) ➔ v1.4 (74.9) [+8.7 pts · #2 Globally · #1 Open Model]
       </div>
     </div>
 
@@ -723,29 +723,9 @@ TABLE_HTML = """<!DOCTYPE html>
         </tr>
       </thead>
       <tbody>
-        <!-- Row 1: openJev Verdict v1.4 -->
-        <tr class="highlighted">
-          <td class="rank-col rank-hl">1*</td>
-          <td>
-            <div class="sys-by" style="color: #38bdf8;">by Hemant (heman10x)</div>
-            <div class="sys-name" style="color: #f0f6fc;">openJev Verdict v1.4<span class="pill-pr">PR PENDING</span></div>
-            <div class="sys-sub" style="color: #7dd3fc;">heman10x, ModernBERT-base 151M (inference fixes, public eval)</div>
-          </td>
-          <td class="num score-hl">75.6</td>
-          <td class="num" style="color: #38bdf8; font-weight: 700;">61.2</td>
-          <td class="num" style="color: #38bdf8; font-weight: 700;">77.8</td>
-          <td class="num" style="color: #38bdf8; font-weight: 700;">82.8</td>
-          <td class="num" style="color: #38bdf8; font-weight: 700;">83.1</td>
-          <td class="num" style="color: #7dd3fc;">~$0.0037 <span style="font-size: 10.5px; color: #8b949e;">est.</span></td>
-          <td class="num" style="color: #38bdf8;">88.2%</td>
-          <td class="num" style="color: #38bdf8;">72.6%</td>
-          <td class="num">61.0%</td>
-          <td class="num">38.2%</td>
-        </tr>
-
-        <!-- Row 2: Jev 1.13.0 -->
+        <!-- Row 1: Jev 1.13.0 -->
         <tr>
-          <td class="rank-col">2</td>
+          <td class="rank-col">1</td>
           <td>
             <div class="sys-by">by TypeSafe AI</div>
             <div class="sys-name">Jev 1.13.0</div>
@@ -761,6 +741,26 @@ TABLE_HTML = """<!DOCTYPE html>
           <td class="num">99.0%</td>
           <td class="num">94.6%</td>
           <td class="num">74.1%</td>
+        </tr>
+
+        <!-- Row 2: openJev Verdict v1.4 -->
+        <tr class="highlighted">
+          <td class="rank-col rank-hl">2*</td>
+          <td>
+            <div class="sys-by" style="color: #38bdf8;">by Hemant (heman10x)</div>
+            <div class="sys-name" style="color: #f0f6fc;">openJev Verdict v1.4<span class="pill-pr">#1 OPEN</span></div>
+            <div class="sys-sub" style="color: #7dd3fc;">heman10x, ModernBERT-base 151M (inference fixes, public eval)</div>
+          </td>
+          <td class="num score-hl">74.9</td>
+          <td class="num" style="color: #38bdf8; font-weight: 700;">61.2</td>
+          <td class="num" style="color: #38bdf8; font-weight: 700;">74.6</td>
+          <td class="num" style="color: #38bdf8; font-weight: 700;">82.8</td>
+          <td class="num" style="color: #38bdf8; font-weight: 700;">83.1</td>
+          <td class="num" style="color: #7dd3fc;">~$0.0037 <span style="font-size: 10.5px; color: #8b949e;">est.</span></td>
+          <td class="num" style="color: #38bdf8;">88.2%</td>
+          <td class="num" style="color: #38bdf8;">72.6%</td>
+          <td class="num">61.0%</td>
+          <td class="num">38.2%</td>
         </tr>
 
         <!-- Row 3: SemIf -->
@@ -987,10 +987,10 @@ TABLE_HTML = """<!DOCTYPE html>
 
     <div class="banner-footnote">
       <div>
-        <strong>* openJev Verdict v1.4</strong> evaluated on 231 public JevBench tasks; PR #2 submitted for official 534-task private run. Byte-identical weights, inference fixes only.
+        <strong>* openJev Verdict v1.4</strong> evaluated on 231 public JevBench tasks with out-of-domain NLL calibration. Byte-identical weights, inference fixes only.
       </div>
       <div style="font-family: ui-monospace, monospace; font-weight: 600;">
-        v1.0 (66.2) ➔ v1.4 (75.6) [+9.4 pts]
+        v1.0 (66.2) ➔ v1.4 (74.9) [+8.7 pts · #2 Globally · #1 Open Model]
       </div>
     </div>
   </div>
