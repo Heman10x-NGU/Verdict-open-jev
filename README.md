@@ -13,6 +13,34 @@ Instead of generating free-form conversational text that software must parse and
 
 ---
 
+## What changed in the inference engine
+
+These are inference fixes, not a retrain. The weights are byte-identical to the published checkpoint. Measured on the 231 public JevBench tasks.
+
+![Inference Engine v1.4: Metric Improvements](assets/v1.4/benchmark-deltas.png)
+
+![JevBench Public Evaluation Breakdown](assets/v1.4/benchmark-table.png)
+
+The update addresses three defects in the inference engine:
+
+1. Calibrator auto-loading and removal of the 5-option scope restriction: The engine previously failed to load `calibrator.json` during standalone instantiation, running at uncalibrated temperature 1.0. A scope check also limited calibration exclusively to 5-candidate queries, leaving other cardinalities unscaled. The engine now loads calibrated temperatures automatically and scales across all supported candidate counts.
+2. NLI sentence templating for candidate labels: Candidate labels were previously evaluated as bare noun phrases. Because the underlying GLiClass backbone descends from natural language inference (NLI) formulations that expect hypothesis sentences, formatting candidates with hypothesis framing (`It is {description}`) aligns inputs with pretrained representations and lifts accuracy.
+3. Context budget cut from 1024 to 512 tokens: The model weights were trained on context states under 71 tokens. Reducing the maximum token budget from 1024 to 512 tokens avoids out-of-distribution positional drift while preserving complete task contexts.
+
+### Measured results across 231 public JevBench tasks
+
+| Evaluation metric / slice | Before (v1.0) | After (v1.4) | Change | Invariant / mechanism |
+| :--- | :--- | :--- | :--- | :--- |
+| Easy tier accuracy (48 tasks) | 85.4% | 87.5% | +2.1% | NLI sentence templating |
+| Standard tier accuracy (72 tasks) | 62.5% | 69.4% | +6.9% | NLI sentence templating |
+| Hard tier accuracy (111 tasks) | 36.9% | 36.9% | 0.0% (unchanged) | Context budget (512 tokens) |
+| Hard-tier calibration error (ECE) | 0.298 | 0.118 | -0.180 (-60.4%) | Auto-calibrator and per-k scaling |
+| Probability fidelity | 62.8 | 72.8 | +10.0 pts | Auto-calibrator and per-k scaling |
+
+Model weights and artifacts are hosted on Hugging Face at [heman10x/rlcd-modernbert-151m](https://huggingface.co/heman10x/rlcd-modernbert-151m). Full benchmark details and leaderboards are available at [Benchmark Heaven Jev Models](https://benchmarkheaven.com/jev-models).
+
+---
+
 ## The core thesis: Jevons\' paradox in software automation
 
 ![Why Jev matters](assets/why-jev-matters.jpg)
