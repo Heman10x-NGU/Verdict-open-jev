@@ -1,0 +1,30 @@
+{
+  "version": "v1.4.2.2",
+  "scope_note": "Downloadable public subset (231 of 534 leaderboard items). 303 organizer-held items (24 easy-heldout, 24 standard-heldout, 146 judge/router, 109 hard-heldout) and 308 sealed items are retained privately by benchmark organizers and unavailable locally. Provenance documented in upstream datasets/HARD-TIER.md, datasets/TOPICS.md, and docs/METHOD-v1.4.md.",
+  "files": {
+    "easy.jsonl": {
+      "count": 48,
+      "sha256": "231df3c2c8e88a1a8c137ebe85de96ba70fabd330849098ac7b3c52c70b7172b",
+      "tier": "easy",
+      "upstream_tier_total": 72
+    },
+    "original.jsonl": {
+      "count": 72,
+      "sha256": "5c2414edb3006b8bfcb70fda433f0f9ca015759433849f8d3104328a1f7c4180",
+      "tier": "standard",
+      "upstream_tier_total": 96
+    },
+    "hard.jsonl": {
+      "count": 111,
+      "sha256": "89e9e6becb33ed88c1de7d42dcc87531b2fb64cfaef4e1986faf7c37b3f80ebb",
+      "tier": "hard",
+      "upstream_tier_total": 220
+    }
+  },
+  "summary": {
+    "downloadable_public_items": 231,
+    "total_upstream_items": 534,
+    "held_out_items": 303,
+    "sealed_evaluation_items": 308
+  }
+}

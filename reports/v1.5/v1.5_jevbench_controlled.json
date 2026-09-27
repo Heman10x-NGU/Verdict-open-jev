@@ -1,0 +1,152 @@
+{
+  "metadata": {
+    "title": "Controlled JevBench Benchmark Report (v1.4-frozen vs v1.5)",
+    "timestamp_utc": "2026-09-27T22:50:45Z",
+    "model": "heman10x/rlcd-modernbert-151m",
+    "suite": "JevBench v1.4.2.2 Downloadable Public Subset (231 items)",
+    "provenance_note": "Evaluated on the complete public downloadable set of 231 items (48 easy, 72 standard, 111 hard). The remaining 303 organizer-held items and 308 sealed items are retained privately and unavailable locally (per upstream HARD-TIER.md, TOPICS.md, and METHOD-v1.4.md)."
+  },
+  "configurations": {
+    "v1.4-frozen": {
+      "max_length": 512,
+      "calibrator": "artifacts/v2/calibrator.json",
+      "effective_temperature": "per_k (T=5.0069 for k<=3)",
+      "truncation": "head-only 512 tokens"
+    },
+    "v1.5": {
+      "max_length": 2048,
+      "calibrator": "artifacts/v1.5/calibrator.json",
+      "effective_temperature": "per_k (k=3 at T=5.0069; choice path identical to v2)",
+      "truncation": "7000-char middle truncation budget allocator + 2048 context window"
+    }
+  },
+  "truncation_analysis": {
+    "total_tasks": 231,
+    "total_over_512": 61,
+    "total_over_2048": 36,
+    "per_tier": {
+      "easy": {
+        "total": 48,
+        "over_512": 0,
+        "over_2048": 0,
+        "max_tokens": 180
+      },
+      "standard": {
+        "total": 72,
+        "over_512": 0,
+        "over_2048": 0,
+        "max_tokens": 188
+      },
+      "hard": {
+        "total": 111,
+        "over_512": 61,
+        "over_2048": 36,
+        "max_tokens": 3705
+      }
+    }
+  },
+  "results": {
+    "v1.4-frozen": {
+      "tiers": {
+        "easy": {
+          "total": 48,
+          "scorable": 48,
+          "correct": 42,
+          "abstentions": 0,
+          "accuracy": 0.875
+        },
+        "standard": {
+          "total": 72,
+          "scorable": 72,
+          "correct": 50,
+          "abstentions": 10,
+          "accuracy": 0.6944
+        },
+        "hard": {
+          "total": 111,
+          "scorable": 111,
+          "correct": 41,
+          "abstentions": 18,
+          "accuracy": 0.3694
+        }
+      },
+      "long_policy_slice": {
+        "total": 19,
+        "correct": 6,
+        "accuracy": 0.3158
+      },
+      "metrics": {
+        "hard_ece": 0.1177,
+        "probability_fidelity": 72.78,
+        "mean_tvd": 0.2722,
+        "p50_latency_s": 0.4039,
+        "p95_latency_s": 1.8313
+      },
+      "partial_axes": {
+        "intelligence": 43.2,
+        "calibration": 74.62,
+        "speed": 74.38,
+        "cost": 82.95
+      },
+      "partial_harmonic_mean": 64.46,
+      "partial_composite_score": 48.12
+    },
+    "v1.5": {
+      "tiers": {
+        "easy": {
+          "total": 48,
+          "scorable": 48,
+          "correct": 42,
+          "abstentions": 0,
+          "accuracy": 0.875
+        },
+        "standard": {
+          "total": 72,
+          "scorable": 72,
+          "correct": 50,
+          "abstentions": 10,
+          "accuracy": 0.6944
+        },
+        "hard": {
+          "total": 111,
+          "scorable": 111,
+          "correct": 45,
+          "abstentions": 14,
+          "accuracy": 0.4054
+        }
+      },
+      "long_policy_slice": {
+        "total": 19,
+        "correct": 7,
+        "accuracy": 0.3684
+      },
+      "metrics": {
+        "hard_ece": 0.0899,
+        "probability_fidelity": 71.39,
+        "mean_tvd": 0.2861,
+        "p50_latency_s": 0.165,
+        "p95_latency_s": 6.051
+      },
+      "partial_axes": {
+        "intelligence": 44.73,
+        "calibration": 76.7,
+        "speed": 72.31,
+        "cost": 82.95
+      },
+      "partial_harmonic_mean": 65.28,
+      "partial_composite_score": 52.24
+    }
+  },
+  "deltas": {
+    "easy_accuracy_delta": 0.0,
+    "standard_accuracy_delta": 0.0,
+    "hard_accuracy_delta": 0.036,
+    "long_policy_delta": 0.0526,
+    "hard_ece_delta": -0.0278,
+    "probability_fidelity_delta": -1.39
+  },
+  "gate_status": {
+    "verdict": "REJECTED (Intelligence < 50, partial suite; no leaderboard delta claimed)",
+    "reason": "Intelligence axis is below 50.0 threshold. Score is computed strictly on partial 231-item public subset without 308 sealed items or gap penalty; no official leaderboard rank delta can be claimed."
+  }
+}
