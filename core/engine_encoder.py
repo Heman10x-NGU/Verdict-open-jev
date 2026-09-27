@@ -61,12 +61,14 @@ class DecisionEngine:
         tokenizer: Any = None,
         calibrator: TemperatureCalibrator | None = None,
         device: str = "cpu",
-        max_length: int = 512,
+        max_length: int = 2048,
+        suite_temperature: float | None = None,
     ):
         self.model_name_or_path = model_name_or_path
         self.device = device
         self.max_length = max_length
         self.calibrator = calibrator
+        self.suite_temperature = suite_temperature
 
         if model is not None and tokenizer is not None:
             self.model = model
@@ -96,10 +98,13 @@ class DecisionEngine:
                 if not onnx_file:
                     repo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
                     for cand in [
+                        os.path.join(repo_dir, "artifacts", "v1.5", "model.onnx"),
                         os.path.join(repo_dir, "artifacts", "v2", "model.onnx"),
                         os.path.join(repo_dir, "artifacts", "openjev_modernbert.onnx"),
+                        os.path.join(repo_dir, "..", "artifacts", "v1.5", "model.onnx"),
                         os.path.join(repo_dir, "..", "artifacts", "v2", "model.onnx"),
                         os.path.join(repo_dir, "..", "artifacts", "openjev_modernbert.onnx"),
+                        "artifacts/v1.5/model.onnx",
                         "artifacts/v2/model.onnx",
                         "artifacts/openjev_modernbert.onnx",
                     ]:
@@ -132,12 +137,15 @@ class DecisionEngine:
             if not cal_file:
                 repo_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
                 for cand in [
+                    os.path.join(repo_dir, "artifacts", "v1.5", "calibrator.json"),
                     os.path.join(repo_dir, "artifacts", "v2", "calibrator.json"),
                     os.path.join(repo_dir, "artifacts", "calibrator.json"),
                     os.path.join(repo_dir, "artifacts", "calibrator_modernbert.json"),
+                    os.path.join(repo_dir, "..", "artifacts", "v1.5", "calibrator.json"),
                     os.path.join(repo_dir, "..", "artifacts", "v2", "calibrator.json"),
                     os.path.join(repo_dir, "..", "artifacts", "calibrator.json"),
                     os.path.join(repo_dir, "..", "artifacts", "calibrator_modernbert.json"),
+                    "artifacts/v1.5/calibrator.json",
                     "artifacts/v2/calibrator.json",
                     "artifacts/calibrator.json",
                     "artifacts/calibrator_modernbert.json",
@@ -169,6 +177,8 @@ class DecisionEngine:
         self,
         context: str,
         queries: Sequence[Query],
+        return_raw_logits: bool = False,
+        temperature: float | None = None,
     ) -> DecisionBatchResult:
         """Evaluate multiple typed queries in a single batched forward pass."""
         if not queries:
@@ -181,12 +191,20 @@ class DecisionEngine:
 
         start_time = time.perf_counter()
 
+        def _allocate_budget(ctx: str, max_chars: int = 7000) -> str:
+            if len(ctx) <= max_chars:
+                return ctx
+            half = max_chars // 2
+            return ctx[:half] + "\n...[middle content omitted for length]...\n" + ctx[-half:]
+
+        budgeted_context = _allocate_budget(context)
+
         formatted_texts: list[str] = []
         batch_labels: list[list[str]] = []
         batch_ids: list[list[str]] = []
 
         for q in queries:
-            text, labels, ids = format_query(context, q)
+            text, labels, ids = format_query(budgeted_context, q)
             if len(labels) > MAX_SUPPORTED_CANDIDATES:
                 logging.warning(
                     "Candidate count %d exceeds MAX_SUPPORTED_CANDIDATES %d; degrading by truncating.",
@@ -209,7 +227,7 @@ class DecisionEngine:
             prompts = []
             for q, labels, text in zip(queries, batch_labels, formatted_texts):
                 if q.kind in ("choice", "score"):
-                    prompts.append(build_model_input(q.question, context, labels))
+                    prompts.append(build_model_input(q.question, budgeted_context, labels))
                 else:
                     prompts.append(build_model_input("", text, labels))
             tokenized_inputs = self.tokenizer(
@@ -259,11 +277,34 @@ class DecisionEngine:
             ids = batch_ids[idx]
 
             # Temperature calibration and scope determination
-            if self.calibrator is not None:
+            effective_t = temperature if temperature is not None else self.suite_temperature
+            if effective_t is not None and not return_raw_logits:
+                cal_logits = logits_tensor / float(effective_t)
+                cal_status = "suite_adapter_calibrated"
+            elif self.calibrator is not None and not return_raw_logits:
                 per_k = getattr(self.calibrator, "per_k", None)
                 k_val = str(len(ids))
                 if per_k and k_val in per_k:
                     t_val = float(per_k[k_val])
+                    cal_logits = logits_tensor / t_val
+                elif per_k:
+                    k_int = len(ids)
+                    int_keys = sorted([int(k) for k in per_k.keys() if k.isdigit()])
+                    if int_keys and k_int <= int_keys[0]:
+                        t_val = float(per_k[str(int_keys[0])])
+                    elif int_keys and k_int >= int_keys[-1]:
+                        t_val = float(per_k[str(int_keys[-1])])
+                    elif int_keys:
+                        low_k = max(k for k in int_keys if k <= k_int)
+                        high_k = min(k for k in int_keys if k >= k_int)
+                        if low_k == high_k:
+                            t_val = float(per_k[str(low_k)])
+                        else:
+                            t_low = float(per_k[str(low_k)])
+                            t_high = float(per_k[str(high_k)])
+                            t_val = t_low + (t_high - t_low) * (k_int - low_k) / (high_k - low_k)
+                    else:
+                        t_val = getattr(self.calibrator, "temperature", 2.0)
                     cal_logits = logits_tensor / t_val
                 else:
                     try:
@@ -273,7 +314,7 @@ class DecisionEngine:
                 cal_status = "calibrated_for_scope"
             else:
                 cal_logits = logits_tensor
-                cal_status = "uncalibrated"
+                cal_status = "raw_logits" if return_raw_logits else "uncalibrated"
 
             raw_probs = F.softmax(cal_logits, dim=-1)[0].cpu().tolist()
             # Normalize to sum to exactly 1.0 within floating point precision
@@ -359,3 +400,13 @@ class DecisionEngine:
             total_latency_ms=total_latency_ms,
             execution_mode="single_call",
         )
+
+    def predict_logits(
+        self,
+        context: str,
+        queries: Sequence[Query],
+    ) -> list[dict[str, float]]:
+        """Return raw uncalibrated logits for each candidate option per query."""
+        res = self.evaluate(context, queries, return_raw_logits=True)
+        return [dict(r.probabilities) for r in res.results]
+
