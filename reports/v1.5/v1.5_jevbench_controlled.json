@@ -1,0 +1,400 @@
+{
+  "metadata": {
+    "title": "Controlled JevBench Inference Improvements Report (v1.4 vs v1.5 ablations)",
+    "timestamp_utc": "2026-09-27T23:47:09Z",
+    "model": "heman10x/rlcd-modernbert-151m",
+    "suite": "JevBench v1.4.2.2 Downloadable Public Subset (231 items)",
+    "provenance_note": "Evaluated on the complete public downloadable set of 231 items (48 easy, 72 standard, 111 hard). The remaining 303 organizer-held items and 308 sealed items are retained privately and unavailable locally (per upstream HARD-TIER.md, TOPICS.md, and METHOD-v1.4.md)."
+  },
+  "configurations": {
+    "v1.4-frozen": {
+      "max_length": 512,
+      "calibrator": "artifacts/v2/calibrator.json",
+      "effective_temperature": "per_k (T=5.0069 for k<=3)",
+      "truncation": "head-only 512 tokens"
+    },
+    "v1.5-baseline": {
+      "max_length": 2048,
+      "calibrator": "artifacts/v1.5/calibrator.json",
+      "effective_temperature": "suite adapter T=1.0 on probes, choice k=3 at T=5.0069",
+      "truncation": "7000-char middle truncation budget allocator + 2048 context window"
+    },
+    "v1.5-smart-framing": {
+      "max_length": 2048,
+      "features": [
+        "smart_framing"
+      ]
+    },
+    "v1.5-query-aware-packing": {
+      "max_length": 2048,
+      "features": [
+        "query_aware_packing (IDF + header 1200-1600 chars)"
+      ]
+    },
+    "v1.5-2perm-tta": {
+      "max_length": 2048,
+      "features": [
+        "2perm_tta (forward+reverse raw logit averaging)"
+      ]
+    },
+    "v1.5-combined": {
+      "max_length": 2048,
+      "features": [
+        "smart_framing",
+        "query_aware_packing",
+        "2perm_tta"
+      ]
+    }
+  },
+  "truncation_analysis": {
+    "total_tasks": 231,
+    "total_over_512": 61,
+    "total_over_2048": 36,
+    "per_tier": {
+      "easy": {
+        "total": 48,
+        "over_512": 0,
+        "over_2048": 0,
+        "max_tokens": 180
+      },
+      "standard": {
+        "total": 72,
+        "over_512": 0,
+        "over_2048": 0,
+        "max_tokens": 188
+      },
+      "hard": {
+        "total": 111,
+        "over_512": 61,
+        "over_2048": 36,
+        "max_tokens": 3695
+      }
+    }
+  },
+  "results": {
+    "v1.4-frozen": {
+      "tiers": {
+        "easy": {
+          "total": 48,
+          "scorable": 48,
+          "correct": 42,
+          "abstentions": 0,
+          "accuracy": 0.875
+        },
+        "standard": {
+          "total": 72,
+          "scorable": 72,
+          "correct": 50,
+          "abstentions": 10,
+          "accuracy": 0.6944
+        },
+        "hard": {
+          "total": 111,
+          "scorable": 111,
+          "correct": 41,
+          "abstentions": 18,
+          "accuracy": 0.3694
+        }
+      },
+      "long_policy_slice": {
+        "total": 19,
+        "correct": 6,
+        "accuracy": 0.3158
+      },
+      "metrics": {
+        "hard_ece": 0.1177,
+        "probability_fidelity": 72.78,
+        "mean_tvd": 0.2722,
+        "p50_latency_s": 0.2069,
+        "p95_latency_s": 0.9049
+      },
+      "partial_axes": {
+        "intelligence": 43.2,
+        "calibration": 74.62,
+        "speed": 79.57,
+        "cost": 82.95
+      },
+      "partial_harmonic_mean": 65.39,
+      "partial_composite_score": 48.81
+    },
+    "v1.5-baseline": {
+      "tiers": {
+        "easy": {
+          "total": 48,
+          "scorable": 48,
+          "correct": 42,
+          "abstentions": 0,
+          "accuracy": 0.875
+        },
+        "standard": {
+          "total": 72,
+          "scorable": 72,
+          "correct": 50,
+          "abstentions": 10,
+          "accuracy": 0.6944
+        },
+        "hard": {
+          "total": 111,
+          "scorable": 111,
+          "correct": 45,
+          "abstentions": 14,
+          "accuracy": 0.4054
+        }
+      },
+      "long_policy_slice": {
+        "total": 19,
+        "correct": 7,
+        "accuracy": 0.3684
+      },
+      "metrics": {
+        "hard_ece": 0.0899,
+        "probability_fidelity": 71.39,
+        "mean_tvd": 0.2861,
+        "p50_latency_s": 0.3713,
+        "p95_latency_s": 6.5592
+      },
+      "partial_axes": {
+        "intelligence": 44.73,
+        "calibration": 76.7,
+        "speed": 69.27,
+        "cost": 82.95
+      },
+      "partial_harmonic_mean": 64.64,
+      "partial_composite_score": 51.73
+    },
+    "v1.5-smart-framing": {
+      "tiers": {
+        "easy": {
+          "total": 48,
+          "scorable": 48,
+          "correct": 42,
+          "abstentions": 0,
+          "accuracy": 0.875
+        },
+        "standard": {
+          "total": 72,
+          "scorable": 72,
+          "correct": 47,
+          "abstentions": 10,
+          "accuracy": 0.6528
+        },
+        "hard": {
+          "total": 111,
+          "scorable": 111,
+          "correct": 43,
+          "abstentions": 14,
+          "accuracy": 0.3874
+        }
+      },
+      "long_policy_slice": {
+        "total": 19,
+        "correct": 6,
+        "accuracy": 0.3158
+      },
+      "metrics": {
+        "hard_ece": 0.0643,
+        "probability_fidelity": 70.47,
+        "mean_tvd": 0.2953,
+        "p50_latency_s": 0.2307,
+        "p95_latency_s": 2.9026
+      },
+      "partial_axes": {
+        "intelligence": 42.32,
+        "calibration": 78.81,
+        "speed": 74.39,
+        "cost": 82.95
+      },
+      "partial_harmonic_mean": 64.71,
+      "partial_composite_score": 46.36
+    },
+    "v1.5-query-aware-packing": {
+      "tiers": {
+        "easy": {
+          "total": 48,
+          "scorable": 48,
+          "correct": 42,
+          "abstentions": 0,
+          "accuracy": 0.875
+        },
+        "standard": {
+          "total": 72,
+          "scorable": 72,
+          "correct": 50,
+          "abstentions": 10,
+          "accuracy": 0.6944
+        },
+        "hard": {
+          "total": 111,
+          "scorable": 111,
+          "correct": 45,
+          "abstentions": 12,
+          "accuracy": 0.4054
+        }
+      },
+      "long_policy_slice": {
+        "total": 19,
+        "correct": 7,
+        "accuracy": 0.3684
+      },
+      "metrics": {
+        "hard_ece": 0.0784,
+        "probability_fidelity": 71.39,
+        "mean_tvd": 0.2861,
+        "p50_latency_s": 0.2693,
+        "p95_latency_s": 2.8723
+      },
+      "partial_axes": {
+        "intelligence": 44.73,
+        "calibration": 77.85,
+        "speed": 73.92,
+        "cost": 82.95
+      },
+      "partial_harmonic_mean": 65.81,
+      "partial_composite_score": 52.66
+    },
+    "v1.5-2perm-tta": {
+      "tiers": {
+        "easy": {
+          "total": 48,
+          "scorable": 48,
+          "correct": 42,
+          "abstentions": 0,
+          "accuracy": 0.875
+        },
+        "standard": {
+          "total": 72,
+          "scorable": 72,
+          "correct": 48,
+          "abstentions": 9,
+          "accuracy": 0.6667
+        },
+        "hard": {
+          "total": 111,
+          "scorable": 111,
+          "correct": 37,
+          "abstentions": 13,
+          "accuracy": 0.3333
+        }
+      },
+      "long_policy_slice": {
+        "total": 19,
+        "correct": 6,
+        "accuracy": 0.3158
+      },
+      "metrics": {
+        "hard_ece": 0.1207,
+        "probability_fidelity": 71.05,
+        "mean_tvd": 0.2895,
+        "p50_latency_s": 0.2958,
+        "p95_latency_s": 6.1646
+      },
+      "partial_axes": {
+        "intelligence": 40.57,
+        "calibration": 73.46,
+        "speed": 70.34,
+        "cost": 82.95
+      },
+      "partial_harmonic_mean": 61.98,
+      "partial_composite_score": 40.81
+    },
+    "v1.5-combined": {
+      "tiers": {
+        "easy": {
+          "total": 48,
+          "scorable": 48,
+          "correct": 42,
+          "abstentions": 0,
+          "accuracy": 0.875
+        },
+        "standard": {
+          "total": 72,
+          "scorable": 72,
+          "correct": 45,
+          "abstentions": 9,
+          "accuracy": 0.625
+        },
+        "hard": {
+          "total": 111,
+          "scorable": 111,
+          "correct": 37,
+          "abstentions": 10,
+          "accuracy": 0.3333
+        }
+      },
+      "long_policy_slice": {
+        "total": 19,
+        "correct": 7,
+        "accuracy": 0.3684
+      },
+      "metrics": {
+        "hard_ece": 0.1187,
+        "probability_fidelity": 70.55,
+        "mean_tvd": 0.2945,
+        "p50_latency_s": 0.2242,
+        "p95_latency_s": 3.2198
+      },
+      "partial_axes": {
+        "intelligence": 38.92,
+        "calibration": 73.4,
+        "speed": 74.04,
+        "cost": 82.95
+      },
+      "partial_harmonic_mean": 61.65,
+      "partial_composite_score": 37.36
+    }
+  },
+  "ablation_summary": {
+    "v1.4-frozen": {
+      "easy": 0.875,
+      "standard": 0.6944,
+      "hard": 0.3694,
+      "long_policy": 0.3158,
+      "hard_ece": 0.1177,
+      "composite": 48.81
+    },
+    "v1.5-baseline": {
+      "easy": 0.875,
+      "standard": 0.6944,
+      "hard": 0.4054,
+      "long_policy": 0.3684,
+      "hard_ece": 0.0899,
+      "composite": 51.73
+    },
+    "v1.5-smart-framing": {
+      "easy": 0.875,
+      "standard": 0.6528,
+      "hard": 0.3874,
+      "long_policy": 0.3158,
+      "hard_ece": 0.0643,
+      "composite": 46.36
+    },
+    "v1.5-query-aware-packing": {
+      "easy": 0.875,
+      "standard": 0.6944,
+      "hard": 0.4054,
+      "long_policy": 0.3684,
+      "hard_ece": 0.0784,
+      "composite": 52.66
+    },
+    "v1.5-2perm-tta": {
+      "easy": 0.875,
+      "standard": 0.6667,
+      "hard": 0.3333,
+      "long_policy": 0.3158,
+      "hard_ece": 0.1207,
+      "composite": 40.81
+    },
+    "v1.5-combined": {
+      "easy": 0.875,
+      "standard": 0.625,
+      "hard": 0.3333,
+      "long_policy": 0.3684,
+      "hard_ece": 0.1187,
+      "composite": 37.36
+    }
+  },
+  "gate_status": {
+    "verdict": "REJECTED (Intelligence < 50, partial suite; no leaderboard delta claimed)",
+    "reason": "Intelligence axis is below 50.0 threshold. Score is computed strictly on partial 231-item public subset without 308 sealed items or gap penalty; no official leaderboard rank delta can be claimed."
+  }
+}

@@ -65,9 +65,62 @@ def build_model_input(
     return format_prompt(text, label_descriptions)
 
 
+CLAUSE_STARTERS: tuple[str, ...] = (
+    "The",
+    "This",
+    "That",
+    "These",
+    "Those",
+    "There",
+    "No",
+    "Level",
+    "A",
+    "An",
+)
+
+
+def frame_hypothesis(desc: str) -> str:
+    """Frame an option description into a natural hypothesis for GLiClass / NLI.
+
+    Deterministic rules:
+    1. Descriptions starting with (The, This, That, These, Those, There, No, Level, A, An)
+       with 4+ words pass through bare (they are already complete clauses).
+    2. Descriptions whose first word is a capitalized 3rd-person present verb (ends in 's':
+       Asks, Wants, States, etc., excluding clause starters) template as
+       "The request " + lowercased description.
+    3. Everything else defaults to "It is " + description.
+    """
+    desc = desc.strip()
+    words = desc.split()
+    if not words:
+        return desc
+
+    first_word = words[0]
+
+    # Rule 1: Clause starters with 4+ words pass through bare
+    if first_word in CLAUSE_STARTERS:
+        if len(words) >= 4:
+            return desc
+        return f"It is {desc}"
+
+    # Rule 2: 3rd-person present verb (capitalized, ends in 's', alpha, len >= 3)
+    if (
+        first_word[0].isupper()
+        and first_word.endswith("s")
+        and len(first_word) >= 3
+        and first_word.isalpha()
+    ):
+        lowered = desc[0].lower() + desc[1:]
+        return f"The request {lowered}"
+
+    # Rule 3: Default prefix
+    return f"It is {desc}"
+
+
 def format_query(
     context: str,
     query: Query,
+    smart_framing: bool = True,
 ) -> tuple[str, list[str], list[str]]:
     """Format query context and candidate labels.
 
@@ -88,7 +141,14 @@ def format_query(
             )
             options = options[:MAX_SUBSTANTIVE_CANDIDATES]
         formatted_text = f"Question: {query.question}\n\nContext:\n{context}"
-        labels = [f"It is {opt.description}" for opt in options] + [INSUFFICIENT_EVIDENCE_DESC]
+        if smart_framing:
+            labels = [frame_hypothesis(opt.description) for opt in options] + [
+                INSUFFICIENT_EVIDENCE_DESC
+            ]
+        else:
+            labels = [f"It is {opt.description}" for opt in options] + [
+                INSUFFICIENT_EVIDENCE_DESC
+            ]
         ids = [opt.id for opt in options] + [INSUFFICIENT_EVIDENCE_ID]
         return formatted_text, labels, ids
 

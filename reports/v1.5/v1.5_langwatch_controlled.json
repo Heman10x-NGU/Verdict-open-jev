@@ -1,0 +1,72 @@
+{
+  "suite": "LangWatch Instant Evals Probes (Controlled Side-by-Side)",
+  "date": "2026-09-28T03:52:00Z",
+  "config": {
+    "model": "heman10x/rlcd-modernbert-151m",
+    "v1.4_frozen": {
+      "calibrator": "artifacts/v2/calibrator.json",
+      "effective_temperature_on_k3_probes": 5.0069,
+      "max_length": 512,
+      "k_per_binary_item": 3
+    },
+    "v1.5": {
+      "calibrator": "artifacts/v1.5/calibrator.json",
+      "effective_suite_temperature": 1.0,
+      "max_length": 2048,
+      "budget_allocator": "7000-char middle truncation",
+      "k_per_binary_item": 3
+    }
+  },
+  "results": {
+    "v1.4_frozen": {
+      "engine": "v1.4-frozen",
+      "average_score": 78.4,
+      "mean_binary_probability_spread": 0.387,
+      "task_scores": {
+        "prompt_injection": 75.0,
+        "moderation": 100.0,
+        "pii": 100.0,
+        "rag_faithfulness": 50.0,
+        "off_topic": 62.5,
+        "tone": 75.0,
+        "tool_routing": 100.0,
+        "complaint_routing": 75.0,
+        "commit_type": 75.0,
+        "search_relevance": 50.0,
+        "banking_routing": 100.0
+      }
+    },
+    "v1.5": {
+      "engine": "v1.5",
+      "average_score": 78.4,
+      "mean_binary_probability_spread": 0.754,
+      "task_scores": {
+        "prompt_injection": 75.0,
+        "moderation": 100.0,
+        "pii": 100.0,
+        "rag_faithfulness": 50.0,
+        "off_topic": 62.5,
+        "tone": 75.0,
+        "tool_routing": 100.0,
+        "complaint_routing": 75.0,
+        "commit_type": 75.0,
+        "search_relevance": 50.0,
+        "banking_routing": 100.0
+      }
+    }
+  },
+  "comparison": {
+    "average_score": {
+      "v1.4_frozen": 78.4,
+      "v1.5": 78.4,
+      "delta": 0.0,
+      "note": "Identical (0.0 delta) strictly adhering to argmax invariance under positive temperature scaling."
+    },
+    "mean_binary_probability_spread": {
+      "v1.4_frozen": 0.387,
+      "v1.5": 0.754,
+      "delta": 0.367,
+      "note": "Jump from 0.387 to 0.754 confirms complete resolution of the 0.44-0.56 probability collapse under suite adapter T=1.0."
+    }
+  }
+}

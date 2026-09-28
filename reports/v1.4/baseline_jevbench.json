@@ -1,0 +1,44 @@
+{
+  "engine": "v1.4-frozen",
+  "timestamp_utc": "2026-09-27T21:41:30Z",
+  "tasks_path": "benchmarks/jevbench/v1.4.2.2/tasks",
+  "tiers": {
+    "easy": {
+      "total": 48,
+      "scorable": 48,
+      "correct": 42,
+      "abstentions": 0,
+      "accuracy": 0.875
+    },
+    "standard": {
+      "total": 72,
+      "scorable": 72,
+      "correct": 50,
+      "abstentions": 10,
+      "accuracy": 0.6944
+    },
+    "hard": {
+      "total": 111,
+      "scorable": 111,
+      "correct": 41,
+      "abstentions": 18,
+      "accuracy": 0.3694
+    }
+  },
+  "metrics": {
+    "hard_ece": 0.1177,
+    "probability_fidelity": 72.78,
+    "mean_tvd": 0.2722,
+    "p50_latency_s": 0.0901,
+    "p95_latency_s": 0.3231
+  },
+  "axes": {
+    "intelligence": 43.2,
+    "calibration": 74.62,
+    "speed": 85.8,
+    "cost": 82.95
+  },
+  "harmonic_mean": 66.38,
+  "quadratic_penalty_factor": 0.7465,
+  "jevbench_score": 49.55
+}
