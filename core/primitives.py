@@ -237,7 +237,7 @@ class DecisionBatchResult(FrozenModel):
     results: tuple[DecisionResult, ...]
     forward_call_count: int
     total_latency_ms: float
-    execution_mode: Literal["single_call", "orchestrated"] = "single_call"
+    execution_mode: Literal["single_call", "orchestrated", "2perm_tta"] = "single_call"
 
     @field_validator("results", mode="before")
     @classmethod

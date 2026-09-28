@@ -8,6 +8,7 @@ from core.formatting import (
     MAX_SUPPORTED_CANDIDATES,
     format_prompt,
     format_query,
+    frame_hypothesis,
 )
 from core.primitives import Choice, Option, Score, Level, Noul
 
@@ -29,8 +30,22 @@ def test_format_query_choice() -> None:
     )
     text, labels, ids = format_query("Customer requested refund on item #42", q)
     assert text == "Question: Select action\n\nContext:\nCustomer requested refund on item #42"
-    assert labels == ["Issue full refund", "Cancel active subscription", "insufficient evidence"]
+    assert labels == ["It is Issue full refund", "It is Cancel active subscription", "insufficient evidence"]
     assert ids == ["refund", "cancel", "__insufficient_evidence__"]
+
+
+def test_hypothesis_framing_fixtures() -> None:
+    # Four observed fixtures specified in Muse ruling:
+    assert frame_hypothesis("The building water damage is excluded") == "The building water damage is excluded"
+    assert frame_hypothesis("Level 1 is the highest level reached") == "Level 1 is the highest level reached"
+    assert frame_hypothesis("Asks about a charge") == "The request asks about a charge"
+    assert frame_hypothesis("Self-contained code writing") == "It is Self-contained code writing"
+
+    # Additional boundary fixtures:
+    assert frame_hypothesis("This policy covers all dental procedures") == "This policy covers all dental procedures"
+    assert frame_hypothesis("This item") == "It is This item"
+    assert frame_hypothesis("Wants expedited shipping") == "The request wants expedited shipping"
+    assert frame_hypothesis("States cancellation terms") == "The request states cancellation terms"
 
 
 def test_choice_capacity_guard() -> None:

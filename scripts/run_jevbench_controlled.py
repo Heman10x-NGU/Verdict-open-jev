@@ -321,41 +321,108 @@ def main():
         "hard": load_jsonl(t_dir / "hard.jsonl"),
     }
 
-    # Instantiate Engines
+    # Instantiate Engines sharing model and tokenizer in memory
     print("Instantiating Engines...")
     v2_cal = TemperatureCalibrator.load(REPO_ROOT / "artifacts" / "v2" / "calibrator.json")
     with open(REPO_ROOT / "artifacts" / "v2" / "calibrator.json") as f:
         v2_cal.per_k = json.load(f).get("per_k", {})
 
-    engine_v14 = DecisionEngine(
-        model_name_or_path=args.model,
-        calibrator=v2_cal,
-        device="cpu",
-        max_length=512,
-    )
-
     v15_cal = TemperatureCalibrator.load(REPO_ROOT / "artifacts" / "v1.5" / "calibrator.json")
     with open(REPO_ROOT / "artifacts" / "v1.5" / "calibrator.json") as f:
         v15_cal.per_k = json.load(f).get("per_k", {})
 
-    engine_v15 = DecisionEngine(
+    engine_base = DecisionEngine(
         model_name_or_path=args.model,
         calibrator=v15_cal,
         device="cpu",
         max_length=2048,
+        enable_smart_framing=False,
+        enable_query_aware_packing=False,
+        enable_2perm_tta=False,
+    )
+    shared_model = engine_base.model
+    shared_tokenizer = engine_base.tokenizer
+
+    engine_v14 = DecisionEngine(
+        model=shared_model,
+        tokenizer=shared_tokenizer,
+        calibrator=v2_cal,
+        device="cpu",
+        max_length=512,
+        enable_smart_framing=False,
+        enable_query_aware_packing=False,
+        enable_2perm_tta=False,
     )
 
-    truncation_analysis = analyze_truncations(engine_v15, tasks_by_tier)
+    engine_v15_baseline = engine_base
 
-    # Run v1.4-frozen
+    engine_v15_framing = DecisionEngine(
+        model=shared_model,
+        tokenizer=shared_tokenizer,
+        calibrator=v15_cal,
+        device="cpu",
+        max_length=2048,
+        enable_smart_framing=True,
+        enable_query_aware_packing=False,
+        enable_2perm_tta=False,
+    )
+
+    engine_v15_packing = DecisionEngine(
+        model=shared_model,
+        tokenizer=shared_tokenizer,
+        calibrator=v15_cal,
+        device="cpu",
+        max_length=2048,
+        enable_smart_framing=False,
+        enable_query_aware_packing=True,
+        enable_2perm_tta=False,
+    )
+
+    engine_v15_tta = DecisionEngine(
+        model=shared_model,
+        tokenizer=shared_tokenizer,
+        calibrator=v15_cal,
+        device="cpu",
+        max_length=2048,
+        enable_smart_framing=False,
+        enable_query_aware_packing=False,
+        enable_2perm_tta=True,
+    )
+
+    engine_v15_combined = DecisionEngine(
+        model=shared_model,
+        tokenizer=shared_tokenizer,
+        calibrator=v15_cal,
+        device="cpu",
+        max_length=2048,
+        enable_smart_framing=True,
+        enable_query_aware_packing=True,
+        enable_2perm_tta=True,
+    )
+
+    truncation_analysis = analyze_truncations(engine_v15_baseline, tasks_by_tier)
+
+    # 1. Run v1.4-frozen
     v14_results = run_engine_suite(engine_v14, "v1.4-frozen", tasks_by_tier)
 
-    # Run v1.5
-    v15_results = run_engine_suite(engine_v15, "v1.5", tasks_by_tier)
+    # 2. Run v1.5-baseline
+    v15_base_results = run_engine_suite(engine_v15_baseline, "v1.5-baseline", tasks_by_tier)
+
+    # 3. Run v1.5-smart-framing (Item 1)
+    v15_framing_results = run_engine_suite(engine_v15_framing, "v1.5-smart-framing", tasks_by_tier)
+
+    # 4. Run v1.5-query-aware-packing (Item 3)
+    v15_packing_results = run_engine_suite(engine_v15_packing, "v1.5-query-aware-packing", tasks_by_tier)
+
+    # 5. Run v1.5-2perm-tta (Item 2)
+    v15_tta_results = run_engine_suite(engine_v15_tta, "v1.5-2perm-tta", tasks_by_tier)
+
+    # 6. Run v1.5-combined (All 3)
+    v15_combined_results = run_engine_suite(engine_v15_combined, "v1.5-combined", tasks_by_tier)
 
     report = {
         "metadata": {
-            "title": "Controlled JevBench Benchmark Report (v1.4-frozen vs v1.5)",
+            "title": "Controlled JevBench Inference Improvements Report (v1.4 vs v1.5 ablations)",
             "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
             "model": args.model,
             "suite": "JevBench v1.4.2.2 Downloadable Public Subset (231 items)",
@@ -368,25 +435,87 @@ def main():
                 "effective_temperature": "per_k (T=5.0069 for k<=3)",
                 "truncation": "head-only 512 tokens",
             },
-            "v1.5": {
+            "v1.5-baseline": {
                 "max_length": 2048,
                 "calibrator": "artifacts/v1.5/calibrator.json",
                 "effective_temperature": "suite adapter T=1.0 on probes, choice k=3 at T=5.0069",
                 "truncation": "7000-char middle truncation budget allocator + 2048 context window",
             },
+            "v1.5-smart-framing": {
+                "max_length": 2048,
+                "features": ["smart_framing"],
+            },
+            "v1.5-query-aware-packing": {
+                "max_length": 2048,
+                "features": ["query_aware_packing (IDF + header 1200-1600 chars)"],
+            },
+            "v1.5-2perm-tta": {
+                "max_length": 2048,
+                "features": ["2perm_tta (forward+reverse raw logit averaging)"],
+            },
+            "v1.5-combined": {
+                "max_length": 2048,
+                "features": ["smart_framing", "query_aware_packing", "2perm_tta"],
+            },
         },
         "truncation_analysis": truncation_analysis,
         "results": {
             "v1.4-frozen": v14_results,
-            "v1.5": v15_results,
+            "v1.5-baseline": v15_base_results,
+            "v1.5-smart-framing": v15_framing_results,
+            "v1.5-query-aware-packing": v15_packing_results,
+            "v1.5-2perm-tta": v15_tta_results,
+            "v1.5-combined": v15_combined_results,
         },
-        "deltas": {
-            "easy_accuracy_delta": round(v15_results["tiers"]["easy"]["accuracy"] - v14_results["tiers"]["easy"]["accuracy"], 4),
-            "standard_accuracy_delta": round(v15_results["tiers"]["standard"]["accuracy"] - v14_results["tiers"]["standard"]["accuracy"], 4),
-            "hard_accuracy_delta": round(v15_results["tiers"]["hard"]["accuracy"] - v14_results["tiers"]["hard"]["accuracy"], 4),
-            "long_policy_delta": round(v15_results["long_policy_slice"]["accuracy"] - v14_results["long_policy_slice"]["accuracy"], 4),
-            "hard_ece_delta": round(v15_results["metrics"]["hard_ece"] - v14_results["metrics"]["hard_ece"], 4),
-            "probability_fidelity_delta": round(v15_results["metrics"]["probability_fidelity"] - v14_results["metrics"]["probability_fidelity"], 2),
+        "ablation_summary": {
+            "v1.4-frozen": {
+                "easy": v14_results["tiers"]["easy"]["accuracy"],
+                "standard": v14_results["tiers"]["standard"]["accuracy"],
+                "hard": v14_results["tiers"]["hard"]["accuracy"],
+                "long_policy": v14_results["long_policy_slice"]["accuracy"],
+                "hard_ece": v14_results["metrics"]["hard_ece"],
+                "composite": v14_results["partial_composite_score"],
+            },
+            "v1.5-baseline": {
+                "easy": v15_base_results["tiers"]["easy"]["accuracy"],
+                "standard": v15_base_results["tiers"]["standard"]["accuracy"],
+                "hard": v15_base_results["tiers"]["hard"]["accuracy"],
+                "long_policy": v15_base_results["long_policy_slice"]["accuracy"],
+                "hard_ece": v15_base_results["metrics"]["hard_ece"],
+                "composite": v15_base_results["partial_composite_score"],
+            },
+            "v1.5-smart-framing": {
+                "easy": v15_framing_results["tiers"]["easy"]["accuracy"],
+                "standard": v15_framing_results["tiers"]["standard"]["accuracy"],
+                "hard": v15_framing_results["tiers"]["hard"]["accuracy"],
+                "long_policy": v15_framing_results["long_policy_slice"]["accuracy"],
+                "hard_ece": v15_framing_results["metrics"]["hard_ece"],
+                "composite": v15_framing_results["partial_composite_score"],
+            },
+            "v1.5-query-aware-packing": {
+                "easy": v15_packing_results["tiers"]["easy"]["accuracy"],
+                "standard": v15_packing_results["tiers"]["standard"]["accuracy"],
+                "hard": v15_packing_results["tiers"]["hard"]["accuracy"],
+                "long_policy": v15_packing_results["long_policy_slice"]["accuracy"],
+                "hard_ece": v15_packing_results["metrics"]["hard_ece"],
+                "composite": v15_packing_results["partial_composite_score"],
+            },
+            "v1.5-2perm-tta": {
+                "easy": v15_tta_results["tiers"]["easy"]["accuracy"],
+                "standard": v15_tta_results["tiers"]["standard"]["accuracy"],
+                "hard": v15_tta_results["tiers"]["hard"]["accuracy"],
+                "long_policy": v15_tta_results["long_policy_slice"]["accuracy"],
+                "hard_ece": v15_tta_results["metrics"]["hard_ece"],
+                "composite": v15_tta_results["partial_composite_score"],
+            },
+            "v1.5-combined": {
+                "easy": v15_combined_results["tiers"]["easy"]["accuracy"],
+                "standard": v15_combined_results["tiers"]["standard"]["accuracy"],
+                "hard": v15_combined_results["tiers"]["hard"]["accuracy"],
+                "long_policy": v15_combined_results["long_policy_slice"]["accuracy"],
+                "hard_ece": v15_combined_results["metrics"]["hard_ece"],
+                "composite": v15_combined_results["partial_composite_score"],
+            },
         },
         "gate_status": {
             "verdict": "REJECTED (Intelligence < 50, partial suite; no leaderboard delta claimed)",

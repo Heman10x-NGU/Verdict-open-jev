@@ -295,7 +295,29 @@ async function initEngine(basePath = "artifacts_v2") {
 
 // Forward-pass repeats per click. Only the forward pass repeats; tokenization
 // and post-processing stay single-shot.
-const FORWARD_RUNS = 3;
+const CLAUSE_STARTERS = new Set([
+  "The", "This", "That", "These", "Those", "There", "No", "Level", "A", "An"
+]);
+
+function frameHypothesis(desc) {
+  if (!desc) return desc;
+  const trimmed = desc.trim();
+  const words = trimmed.split(/\s+/);
+  if (words.length === 0) return trimmed;
+  const firstWord = words[0];
+
+  if (CLAUSE_STARTERS.has(firstWord)) {
+    if (words.length >= 4) return trimmed;
+    return `It is ${trimmed}`;
+  }
+
+  if (/^[A-Z][a-zA-Z]*s$/.test(firstWord) && firstWord.length >= 3) {
+    const lowered = trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+    return `The request ${lowered}`;
+  }
+
+  return `It is ${trimmed}`;
+}
 
 async function runInference(payload) {
   const { id, text, question, candidates, threshold } = payload;
@@ -316,7 +338,11 @@ async function runInference(payload) {
     .replace("{question}", resolvedQuestion)
     .replace("{context}", text);
 
-  const labelPrefix = candidates.map(c => `${promptContract.label_marker}${c.desc}`).join("");
+  const labelPrefix = candidates.map(c => {
+    const isAbstain = c.id === promptContract.abstention_id || c.desc === promptContract.abstention_description;
+    const desc = isAbstain ? c.desc : frameHypothesis(c.desc);
+    return `${promptContract.label_marker}${desc}`;
+  }).join("");
   const prompt = `${labelPrefix}${promptContract.sep_marker}${formattedText}`;
 
   // 2. Tokenize with explicit bounds
