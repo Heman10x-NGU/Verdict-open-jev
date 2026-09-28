@@ -1,5 +1,6 @@
 # OpenJev (Verdict): Non-Autoregressive Decision Engine (151M)
 
+[![GitHub stars](https://img.shields.io/github/stars/Heman10x-NGU/Verdict-open-jev?style=social)](https://github.com/Heman10x-NGU/Verdict-open-jev/stargazers)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-heman10x%2Frlcd--modernbert--151m-blue)](https://huggingface.co/heman10x/rlcd-modernbert-151m)
 [![GitHub Repository](https://img.shields.io/badge/GitHub-Verdict--open--jev-black?logo=github)](https://github.com/Heman10x-NGU/Verdict-open-jev)
 [![WebGPU Demo](https://img.shields.io/badge/WebGPU-In--Browser%20Playground-green)](#running-the-in-browser-webgpu-playground)
@@ -7,7 +8,9 @@
 [![Calibration](https://img.shields.io/badge/Calibration-RLCD%20%2B%20Brier%20Loss-purple)](#reinforcement-learning-for-calibrated-decisions-rlcd)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue)](LICENSE)
 
-**OpenJev (Verdict)** is an open-source, post-trained foundational decision model designed for structured software workflows, inspired by **TypeSafe AI\'s Jev** and **Reinforcement Learning for Calibrated Decisions (RLCD)**. 
+> ⭐ **Star this repository** if you find sub-35ms calibrated decision models useful for your AI systems.
+
+**OpenJev (Verdict)** is an open-source, post-trained foundational decision model designed for structured software workflows, inspired by **TypeSafe AI's Jev** and **Reinforcement Learning for Calibrated Decisions (RLCD)**. 
 
 Instead of generating free-form conversational text that software must parse and validate, OpenJev accepts unstructured input context and evaluates multiple typed questions in a **single non-autoregressive forward pass**. It returns discrete choices, ordinal scores, and binary probabilities with mathematically calibrated confidence values in under 35 milliseconds.
 

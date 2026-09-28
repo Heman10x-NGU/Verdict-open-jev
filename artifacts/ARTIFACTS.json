@@ -40,8 +40,8 @@
     },
     "calibrator.json": {
       "filename": "calibrator.json",
-      "sha256": "9686e84bb6fb90a8ceabb6994fb9c18ac6a64272d5c413c5f12bed1ee4ccb1b3",
-      "bytes": 299,
+      "sha256": "af2a876993148efa0726b6ccf710fe2303897d20c0ce8c7c9036eb50f64d23de",
+      "bytes": 1259,
       "source_file": "artifacts/v2/calibrator.json"
     },
     "bundle_manifest.json": {
